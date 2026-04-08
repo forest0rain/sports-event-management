@@ -4,7 +4,6 @@ import com.sports.platform.entity.RoleApplication;
 import com.sports.platform.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -51,14 +50,8 @@ public interface RoleApplicationRepository extends JpaRepository<RoleApplication
     long countByStatus(String status);
 
     /**
-     * 根据ID查询申请记录，使用 EntityGraph 加载关联的 User 对象
-     */
-    @EntityGraph(attributePaths = {"user"})
-    Optional<RoleApplication> findByIdFetchingUser(Long id);
-
-    /**
      * 根据ID查询申请记录，同时加载关联的User对象（使用 JOIN FETCH）
      */
     @Query("SELECT ra FROM RoleApplication ra JOIN FETCH ra.user WHERE ra.id = :id")
-    Optional<RoleApplication> findByIdWithUserFetch(@Param("id") Long id);
+    Optional<RoleApplication> findApplicationWithUser(@Param("id") Long id);
 }

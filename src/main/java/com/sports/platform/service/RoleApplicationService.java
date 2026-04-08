@@ -163,7 +163,7 @@ public class RoleApplicationService {
      * 获取申请详情
      */
     public RoleApplication getApplicationById(Long id) {
-        RoleApplication application = applicationRepository.findByIdFetchingUser(id)
+        RoleApplication application = applicationRepository.findApplicationWithUser(id)
                 .orElseThrow(() -> new RuntimeException("申请不存在"));
 
         // 调试日志
@@ -171,14 +171,6 @@ public class RoleApplicationService {
                 application.getId(),
                 application.getUser() != null ? application.getUser().getUsername() : "NULL",
                 application.getUser() == null);
-
-        // 如果 User 为 null，尝试使用 JOIN FETCH 方法
-        if (application.getUser() == null) {
-            log.warn("User 为 null，尝试使用 JOIN FETCH 方法");
-            application = applicationRepository.findByIdWithUserFetch(id)
-                    .orElseThrow(() -> new RuntimeException("申请不存在"));
-            log.info("JOIN FETCH 方法结果 - User is null: {}", application.getUser() == null);
-        }
 
         return application;
     }
