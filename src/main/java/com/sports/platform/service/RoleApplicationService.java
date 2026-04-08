@@ -164,6 +164,7 @@ public class RoleApplicationService {
      * 使用 JOIN FETCH 一次性加载 User 和 Reviewer 关联对象
      * 避免懒加载导致的 null 问题
      */
+    @Transactional(readOnly = true)
     public RoleApplication getApplicationById(Long id) {
         // 直接使用 JOIN FETCH 查询，一次性加载所有关联对象
         RoleApplication application = applicationRepository.findApplicationWithUser(id)

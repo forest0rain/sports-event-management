@@ -71,20 +71,17 @@
         </div>
 
         <!-- 调试信息 -->
-        <th:block th:object="${application}">
         <div class="alert alert-warning">
-            <h6><i class="bi bi-bug me-2"></i>调试信息（仅开发使用）</h6>
+            <h6><i class="bi bi-bug me-2"></i>调试信息</h6>
             <p class="mb-1">application 存在: <span th:text="${application != null}">未知</span></p>
             <p class="mb-1">application.id: <span th:text="${application?.id}">未知</span></p>
             <p class="mb-1">application.user 存在: <span th:text="${application?.user != null}">未知</span></p>
             <p class="mb-1">application.user?.username: <span th:text="${application?.user?.username}">未知</span></p>
             <p class="mb-1">application.requestedRole: <span th:text="${application?.requestedRole}">未知</span></p>
         </div>
-        </th:block>
 
-        <!-- 主要内容区域 - 始终显示，但使用更安全的检查方式 -->
-        <th:block th:if="${application != null}">
-        <div class="row">
+        <!-- 主要内容区域 -->
+        <div th:if="${application != null}" class="row">
             <!-- 左侧：申请人信息 -->
             <div class="col-md-4">
                 <div class="card mb-4">
@@ -250,7 +247,7 @@
                 </div>
 
                 <!-- 操作按钮（待审核时显示） -->
-                <div th:if="${application.status == 'PENDING'}" class="card">
+                <div th:if="${application.status == 'PENDING'}" class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="bi bi-gear me-2"></i>审核操作</h5>
                     </div>
@@ -275,7 +272,6 @@
                         </form>
                     </div>
                 </div>
-                </th:block>
 
                 <!-- 返回按钮 -->
                 <div class="mt-4">
@@ -285,9 +281,8 @@
                 </div>
             </div>
         </div>
-        </th:block>
 
-        <!-- 空数据提示 - 仅当 application 为 null 时显示 -->
+        <!-- 空数据提示 -->
         <div th:if="${application == null}" class="alert alert-warning">
             <h5>数据异常</h5>
             <p>申请记录不存在，请检查数据或返回列表。</p>
