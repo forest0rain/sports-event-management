@@ -54,7 +54,7 @@ public interface RoleApplicationRepository extends JpaRepository<RoleApplication
      * 根据ID查询申请记录，使用 EntityGraph 加载关联的 User 对象
      */
     @EntityGraph(attributePaths = {"user"})
-    Optional<RoleApplication> findByIdWithUser(Long id);
+    Optional<RoleApplication> findByIdFetchingUser(Long id);
 
     /**
      * 根据ID查询申请记录，同时加载关联的User对象（使用 JOIN FETCH）

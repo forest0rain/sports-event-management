@@ -163,7 +163,7 @@ public class RoleApplicationService {
      * 获取申请详情
      */
     public RoleApplication getApplicationById(Long id) {
-        RoleApplication application = applicationRepository.findByIdWithUser(id)
+        RoleApplication application = applicationRepository.findByIdFetchingUser(id)
                 .orElseThrow(() -> new RuntimeException("申请不存在"));
 
         // 调试日志
