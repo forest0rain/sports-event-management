@@ -71,14 +71,20 @@
         </div>
 
         <!-- 调试信息 -->
-        <div class="alert alert-info">
-            <h6><i class="bi bi-bug me-2"></i>调试信息</h6>
-            <p class="mb-1">application: <span th:text="${application != null ? application.id : 'NULL'}">NULL</span></p>
-            <p class="mb-1">application.user: <span th:text="${application != null ? (application.user != null ? application.user.username : 'NULL') : 'application is NULL'}">-</span></p>
-            <p class="mb-0">requestedRole: <span th:text="${application != null ? application.requestedRole : 'NULL'}">-</span></p>
+        <th:block th:object="${application}">
+        <div class="alert alert-warning">
+            <h6><i class="bi bi-bug me-2"></i>调试信息（仅开发使用）</h6>
+            <p class="mb-1">application 存在: <span th:text="${application != null}">未知</span></p>
+            <p class="mb-1">application.id: <span th:text="${application?.id}">未知</span></p>
+            <p class="mb-1">application.user 存在: <span th:text="${application?.user != null}">未知</span></p>
+            <p class="mb-1">application.user?.username: <span th:text="${application?.user?.username}">未知</span></p>
+            <p class="mb-1">application.requestedRole: <span th:text="${application?.requestedRole}">未知</span></p>
         </div>
+        </th:block>
 
-        <div class="row" th:if="${application != null and application.user != null}">
+        <!-- 主要内容区域 - 始终显示，但使用更安全的检查方式 -->
+        <th:block th:if="${application != null}">
+        <div class="row">
             <!-- 左侧：申请人信息 -->
             <div class="col-md-4">
                 <div class="card mb-4">
@@ -95,19 +101,19 @@
                         <table class="table table-borderless">
                             <tr>
                                 <td class="info-label">用户名</td>
-                                <td class="info-value" th:text="${application.user.username}">-</td>
+                                <td class="info-value" th:text="${application.user?.username ?: '未知'}">-</td>
                             </tr>
                             <tr>
                                 <td class="info-label">真实姓名</td>
-                                <td class="info-value" th:text="${application.user.realName}">-</td>
+                                <td class="info-value" th:text="${application.user?.realName ?: '未知'}">-</td>
                             </tr>
                             <tr>
                                 <td class="info-label">邮箱</td>
-                                <td class="info-value" th:text="${application.user.email}">-</td>
+                                <td class="info-value" th:text="${application.user?.email ?: '未知'}">-</td>
                             </tr>
                             <tr>
                                 <td class="info-label">联系电话</td>
-                                <td class="info-value" th:text="${application.contactPhone}">-</td>
+                                <td class="info-value" th:text="${application.contactPhone ?: '未填写'}">-</td>
                             </tr>
                         </table>
                     </div>
@@ -119,9 +125,14 @@
                         <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>当前角色</h5>
                     </div>
                     <div class="card-body">
-                        <span th:each="role : ${application.user.roles}">
-                            <span th:text="${role.name}" class="badge bg-secondary me-1 mb-1"></span>
-                        </span>
+                        <th:block th:if="${application.user != null and application.user.roles != null}">
+                            <span th:each="role : ${application.user.roles}">
+                                <span th:text="${role.name}" class="badge bg-secondary me-1 mb-1"></span>
+                            </span>
+                        </th:block>
+                        <th:block th:unless="${application.user != null and application.user.roles != null}">
+                            <span class="text-muted">未知</span>
+                        </th:block>
                     </div>
                 </div>
             </div>
@@ -264,6 +275,7 @@
                         </form>
                     </div>
                 </div>
+                </th:block>
 
                 <!-- 返回按钮 -->
                 <div class="mt-4">
@@ -273,13 +285,12 @@
                 </div>
             </div>
         </div>
+        </th:block>
 
-        <!-- 空数据提示 -->
-        <div th:if="${application == null or application.user == null}" class="alert alert-warning">
+        <!-- 空数据提示 - 仅当 application 为 null 时显示 -->
+        <div th:if="${application == null}" class="alert alert-warning">
             <h5>数据异常</h5>
-            <p>申请记录或关联用户数据为空，请检查数据库。</p>
-            <p>申请对象: <span th:text="${application}">-</span></p>
-            <p>用户对象: <span th:text="${application != null ? application.user : 'null'}">-</span></p>
+            <p>申请记录不存在，请检查数据或返回列表。</p>
             <div class="mt-3">
                 <a th:href="@{/admin/role-applications}" class="btn btn-primary">
                     <i class="bi bi-arrow-left me-1"></i>返回列表

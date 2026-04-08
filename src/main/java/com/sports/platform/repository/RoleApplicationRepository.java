@@ -50,8 +50,9 @@ public interface RoleApplicationRepository extends JpaRepository<RoleApplication
     long countByStatus(String status);
 
     /**
-     * 根据ID查询申请记录，同时加载关联的User对象（使用 JOIN FETCH）
+     * 根据ID查询申请记录，同时加载关联的User对象（使用 LEFT JOIN FETCH）
+     * 使用 LEFT JOIN 确保即使 user_id 为 null 也能返回申请记录
      */
-    @Query("SELECT ra FROM RoleApplication ra JOIN FETCH ra.user WHERE ra.id = :id")
+    @Query("SELECT ra FROM RoleApplication ra LEFT JOIN FETCH ra.user LEFT JOIN FETCH ra.reviewer WHERE ra.id = :id")
     Optional<RoleApplication> findApplicationWithUser(@Param("id") Long id);
 }
