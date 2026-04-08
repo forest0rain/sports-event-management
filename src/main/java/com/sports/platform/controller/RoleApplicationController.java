@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 角色申请控制器
@@ -124,7 +126,46 @@ public class RoleApplicationController {
     @PreAuthorize("hasRole('ADMIN')")
     public String applicationDetail(@PathVariable Long id, Model model) {
         RoleApplication application = applicationService.getApplicationById(id);
-        model.addAttribute("application", application);
+        
+        // 将数据提取为独立的简单对象，避免 Thymeleaf 无法访问 Hibernate 代理对象的问题
+        Map<String, Object> appData = new HashMap<>();
+        appData.put("id", application.getId());
+        appData.put("requestedRole", application.getRequestedRole());
+        appData.put("reason", application.getReason());
+        appData.put("qualification", application.getQualification());
+        appData.put("qualificationFile", application.getQualificationFile());
+        appData.put("qualificationFileName", application.getQualificationFileName());
+        appData.put("contactPhone", application.getContactPhone());
+        appData.put("status", application.getStatus());
+        appData.put("reviewComment", application.getReviewComment());
+        appData.put("reviewTime", application.getReviewTime());
+        appData.put("createdTime", application.getCreatedTime());
+        
+        // 申请人信息
+        if (application.getUser() != null) {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", application.getUser().getId());
+            userData.put("username", application.getUser().getUsername());
+            userData.put("realName", application.getUser().getRealName());
+            userData.put("email", application.getUser().getEmail());
+            // 角色信息
+            List<String> roleNames = application.getUser().getRoles().stream()
+                    .map(role -> role.getName())
+                    .toList();
+            userData.put("roleNames", roleNames);
+            appData.put("user", userData);
+        }
+        
+        // 审核人信息
+        if (application.getReviewer() != null) {
+            Map<String, Object> reviewerData = new HashMap<>();
+            reviewerData.put("id", application.getReviewer().getId());
+            reviewerData.put("realName", application.getReviewer().getRealName());
+            reviewerData.put("username", application.getReviewer().getUsername());
+            appData.put("reviewer", reviewerData);
+        }
+        
+        model.addAttribute("application", appData);
         model.addAttribute("fileUploadService", fileUploadService);
         return "admin/role-application-detail";
     }
