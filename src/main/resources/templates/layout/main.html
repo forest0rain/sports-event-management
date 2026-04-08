@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="~{layout/fragments :: head('管理后台')}"></head>
+<body>
+    <!-- 导航栏 -->
+    <nav th:replace="~{layout/fragments :: navbar}"></nav>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-2 p-0">
+                <div th:replace="~{layout/fragments :: sidebar}"></div>
+            </div>
+            
+            <!-- 主内容区 -->
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <!-- 消息提示 -->
+                <div th:replace="~{layout/fragments :: messages}"></div>
+                
+                <!-- 页面标题 -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" layout:fragment="page-title">页面标题</h1>
+                    <div layout:fragment="page-actions"></div>
+                </div>
+                
+                <!-- 页面内容 -->
+                <div layout:fragment="content">
+                    <!-- 具体页面内容 -->
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+    
+    <!-- JavaScript -->
+    <div th:replace="~{layout/fragments :: scripts}"></div>
+    
+    <!-- 页面特定脚本 -->
+    <th:block layout:fragment="scripts-extra"></th:block>
+</body>
+</html>

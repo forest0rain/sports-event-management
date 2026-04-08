@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成绩详情 - 体育赛事管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/dashboard}">
+                <i class="bi bi-trophy me-2"></i>体育赛事管理平台
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link text-white" th:href="@{/dashboard}">
+                    <i class="bi bi-house-door me-1"></i>主页
+                </a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-white me-3">
+                    欢迎，<span sec:authentication="name">用户</span>
+                </span>
+                <a class="nav-link text-white" th:href="@{/logout}">
+                    <i class="bi bi-box-arrow-right me-1"></i>退出
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>成绩详情</h2>
+            <div>
+                <a th:href="@{/results}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>返回列表
+                </a>
+                <a th:href="@{/results/{id}/edit(id=${result.id})}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i>编辑
+                </a>
+            </div>
+        </div>
+
+        <!-- 成绩信息 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">成绩信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" width="120">运动员</td>
+                                <td>
+                                    <a th:href="@{/athletes/{id}(id=${result.athlete.id})}" 
+                                       th:text="${result.athlete.name}">-</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">所属单位</td>
+                                <td th:text="${result.athlete.organization}">-</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">比赛项目</td>
+                                <td th:text="${result.sportType != null} ? ${result.sportType.name} : '-'">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" width="120">成绩</td>
+                                <td>
+                                    <h3 class="text-primary mb-0" th:text="${result.scoreText}">-</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">状态</td>
+                                <td>
+                                    <span th:if="${result.status == 'VALID'}" class="badge bg-success">有效</span>
+                                    <span th:if="${result.status == 'INVALID'}" class="badge bg-danger">无效</span>
+                                    <span th:if="${result.status == 'DNS'}" class="badge bg-secondary">弃权</span>
+                                    <span th:if="${result.status == 'DNF'}" class="badge bg-warning">未完成</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">录入时间</td>
+                                <td th:text="${#temporals.format(result.createdTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

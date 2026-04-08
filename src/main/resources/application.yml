@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: sports-event-management
+  
+  # 数据源配置 - MySQL (生产环境)
+  datasource:
+    url: jdbc:mysql://localhost:3306/sports_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      pool-name: SportsPlatformPool
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
+  
+  # Thymeleaf配置
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+  
+  # 静态资源
+  web:
+    resources:
+      static-locations: classpath:/static/
+  
+  # 国际化
+  messages:
+    basename: messages
+    encoding: UTF-8
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  error:
+    path: /error
+    whitelabel:
+      enabled: false
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.sports.platform: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 自定义配置
+app:
+  name: 体育赛事管理平台
+  version: 1.0.0
+  default-page-size: 10
+  max-page-size: 100
+  upload:
+    dir: uploads

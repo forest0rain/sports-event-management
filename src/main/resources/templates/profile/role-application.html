@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色申请 - 体育赛事管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .role-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .role-card.selected {
+            border-color: #0d6efd;
+        }
+        .role-athlete {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        .role-referee {
+            background: linear-gradient(135deg, #fd7e14, #ffc107);
+        }
+        .current-role {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        .file-upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+        .file-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/dashboard}">
+                <i class="bi bi-trophy me-2"></i>体育赛事管理平台
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link text-white" th:href="@{/dashboard}">
+                    <i class="bi bi-house-door me-1"></i>主页
+                </a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-white me-3">
+                    欢迎，<span sec:authentication="name">用户</span>
+                </span>
+                <a class="nav-link text-white" th:href="@{/logout}">
+                    <i class="bi bi-box-arrow-right me-1"></i>退出
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/dashboard}">首页</a></li>
+                        <li class="breadcrumb-item active">角色申请</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 左侧菜单 -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>个人中心</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a th:href="@{/profile/info}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-gear me-2"></i>账号设置
+                        </a>
+                        <a th:href="@{/profile/role-application}" class="list-group-item list-group-item-action active">
+                            <i class="bi bi-arrow-up-circle me-2"></i>角色申请
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧内容 -->
+            <div class="col-md-9">
+        <!-- 提示消息 -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- 当前角色信息 -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>当前角色</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    您当前的账号角色：
+                    <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger">管理员</span>
+                    <span sec:authorize="hasRole('REFEREE') and not hasRole('ADMIN')" class="badge bg-warning">裁判</span>
+                    <span sec:authorize="hasRole('ATHLETE') and not hasRole('ADMIN') and not hasRole('REFEREE')" class="badge bg-success">运动员</span>
+                    <span sec:authorize="hasRole('SPECTATOR') and not hasRole('ADMIN') and not hasRole('REFEREE') and not hasRole('ATHLETE')" class="badge bg-secondary">观众</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- 待审核提示 -->
+        <div th:if="${hasPending}" class="alert alert-warning">
+            <i class="bi bi-clock me-2"></i>
+            <strong>您有正在审核中的申请，请耐心等待管理员审核。</strong>
+        </div>
+
+        <!-- 角色申请表单 -->
+        <div th:unless="${hasPending}" class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-arrow-up-circle me-2"></i>申请角色升级</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">选择您想要申请的角色，填写相关信息后提交申请，管理员将在审核后给予您相应的权限。</p>
+
+                <!-- 角色选择卡片 -->
+                <div class="row mb-4">
+                    <!-- 运动员申请 -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card role-card h-100" th:classappend="${isAthlete} ? 'current-role' : ''" 
+                             onclick="selectRole('ROLE_ATHLETE')" id="card-athlete">
+                            <div class="card-body text-center text-white role-athlete">
+                                <i class="bi bi-person-running" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">运动员</h4>
+                                <p class="mb-0 small">可查看赛事、赛程、成绩，参与报名</p>
+                                <span th:if="${isAthlete}" class="badge bg-light text-dark mt-2">已拥有</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 裁判申请 -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card role-card h-100" th:classappend="${isReferee} ? 'current-role' : ''"
+                             onclick="selectRole('ROLE_REFEREE')" id="card-referee">
+                            <div class="card-body text-center text-white role-referee">
+                                <i class="bi bi-clipboard-check" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">裁判</h4>
+                                <p class="mb-0 small">可管理赛事、赛程、成绩录入</p>
+                                <span th:if="${isReferee}" class="badge bg-light text-dark mt-2">已拥有</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 申请表单 -->
+                <form th:action="@{/profile/role-application}" method="post" id="applicationForm" 
+                      enctype="multipart/form-data">
+                    <input type="hidden" name="requestedRole" id="requestedRole" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">联系电话 <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" name="contactPhone" 
+                                   placeholder="请输入您的联系电话" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">申请角色</label>
+                            <input type="text" class="form-control" id="roleDisplay" readonly 
+                                   placeholder="请点击上方卡片选择">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">相关资质/证书</label>
+                        <textarea class="form-control" name="qualification" rows="2"
+                                  placeholder="请填写您拥有的相关资质证书（如裁判证、运动员等级证书等）"></textarea>
+                    </div>
+
+                    <!-- 文件上传区域 -->
+                    <div class="mb-3">
+                        <label class="form-label">资质证明文件</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #6c757d;"></i>
+                            <p class="mb-1 mt-2">点击或拖拽文件到此处上传</p>
+                            <small class="text-muted">支持 JPG、PNG、GIF 图片和 PDF 文件，最大 5MB</small>
+                            <input type="file" class="d-none" id="qualificationFile" name="qualificationFile"
+                                   accept=".jpg,.jpeg,.png,.gif,.pdf">
+                        </div>
+                        <div id="filePreview" class="mt-2" style="display: none;">
+                            <div class="d-flex align-items-center p-2 bg-light rounded">
+                                <i class="bi bi-file-earmark me-2" id="fileIcon"></i>
+                                <span id="fileName" class="flex-grow-1"></span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="fileError" class="text-danger small mt-1" style="display: none;"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">申请理由 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="reason" rows="3" 
+                                  placeholder="请说明您为什么需要该角色权限" required></textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                            <i class="bi bi-send me-1"></i>提交申请
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 申请历史 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-history me-2"></i>申请记录</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(applications)}" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mt-2">暂无申请记录</p>
+                </div>
+                <div th:unless="${#lists.isEmpty(applications)}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>申请时间</th>
+                                <th>申请角色</th>
+                                <th>状态</th>
+                                <th>审核意见</th>
+                                <th>审核时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="app : ${applications}">
+                                <td th:text="${#temporals.format(app.createdTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <span th:if="${app.requestedRole == 'ROLE_ATHLETE'}" class="badge bg-success">运动员</span>
+                                    <span th:if="${app.requestedRole == 'ROLE_REFEREE'}" class="badge bg-warning">裁判</span>
+                                </td>
+                                <td>
+                                    <span th:if="${app.status == 'PENDING'}" class="badge bg-warning">待审核</span>
+                                    <span th:if="${app.status == 'APPROVED'}" class="badge bg-success">已通过</span>
+                                    <span th:if="${app.status == 'REJECTED'}" class="badge bg-danger">已拒绝</span>
+                                </td>
+                                <td th:text="${app.reviewComment} ?: '-'"></td>
+                                <td th:text="${app.reviewTime} ? ${#temporals.format(app.reviewTime, 'yyyy-MM-dd HH:mm')} : '-'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        let selectedRole = '';
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+
+        function selectRole(role) {
+            // 检查是否已拥有该角色
+            const isAthlete = /*[[${isAthlete}]]*/ false;
+            const isReferee = /*[[${isReferee}]]*/ false;
+            
+            if (role === 'ROLE_ATHLETE' && isAthlete) return;
+            if (role === 'ROLE_REFEREE' && isReferee) return;
+            
+            selectedRole = role;
+            document.getElementById('requestedRole').value = role;
+            
+            // 更新卡片样式
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            if (role === 'ROLE_ATHLETE') {
+                document.getElementById('card-athlete').classList.add('selected');
+                document.getElementById('roleDisplay').value = '运动员';
+            } else if (role === 'ROLE_REFEREE') {
+                document.getElementById('card-referee').classList.add('selected');
+                document.getElementById('roleDisplay').value = '裁判';
+            }
+            
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        // 文件上传处理
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('qualificationFile');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileIcon = document.getElementById('fileIcon');
+        const fileError = document.getElementById('fileError');
+
+        // 点击上传区域触发文件选择
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+
+        // 拖拽上传
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // 文件选择变化
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            fileError.style.display = 'none';
+            
+            // 验证文件类型
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                showError('不支持的文件类型，请上传 JPG、PNG、GIF 图片或 PDF 文件');
+                fileInput.value = '';
+                return;
+            }
+
+            // 验证文件大小
+            if (file.size > MAX_FILE_SIZE) {
+                showError('文件大小超过限制（最大 5MB）');
+                fileInput.value = '';
+                return;
+            }
+
+            // 显示文件预览
+            fileName.textContent = file.name;
+            
+            if (file.type.startsWith('image/')) {
+                fileIcon.className = 'bi bi-file-earmark-image me-2';
+            } else {
+                fileIcon.className = 'bi bi-file-earmark-pdf me-2';
+            }
+            
+            filePreview.style.display = 'block';
+        }
+
+        function showError(message) {
+            fileError.textContent = message;
+            fileError.style.display = 'block';
+        }
+
+        function removeFile() {
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            fileError.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
