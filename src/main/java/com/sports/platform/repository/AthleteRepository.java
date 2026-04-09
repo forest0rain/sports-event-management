@@ -64,4 +64,10 @@ public interface AthleteRepository extends JpaRepository<Athlete, Long> {
      * 查询启用状态的运动员
      */
     Page<Athlete> findByEnabledTrue(Pageable pageable);
+
+    /**
+     * 统计各性别运动员数量
+     */
+    @Query("SELECT a.gender, COUNT(a) FROM Athlete a GROUP BY a.gender")
+    List<Object[]> countByGender();
 }
