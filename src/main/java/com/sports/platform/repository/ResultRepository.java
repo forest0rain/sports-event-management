@@ -61,8 +61,8 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     /**
      * 统计运动员获奖次数(前三名)
      */
-    @Query(value = "SELECT COUNT(*) FROM result WHERE athlete_id = :athleteId AND `rank` <= 3", nativeQuery = true)
-    Long countAwardsByAthlete(@Param("athleteId") Long athleteId);
+    @Query(value = "SELECT COUNT(*) FROM result WHERE athlete_id = ?1 AND `rank` <= 3", nativeQuery = true)
+    Long countAwardsByAthlete(Long athleteId);
 
     /**
      * 统计成绩状态分布
