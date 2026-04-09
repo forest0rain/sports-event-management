@@ -49,10 +49,10 @@ public class DashboardController {
         long pendingCount = roleApplicationRepository.countByStatus("PENDING");
         
         // 获取进行中赛事数量
-        List<Event> ongoingEvents = eventRepository.findByStatus("ONGOING", PageRequest.of(0, 10));
+        List<Event> ongoingEvents = eventRepository.findByStatus("ONGOING", PageRequest.of(0, 10)).getContent();
         
         // 获取报名中赛事
-        List<Event> registrationEvents = eventRepository.findByStatus("REGISTRATION", PageRequest.of(0, 5));
+        List<Event> registrationEvents = eventRepository.findByStatus("REGISTRATION", PageRequest.of(0, 5)).getContent();
         
         // 统计数据
         Map<String, Object> stats = new HashMap<>();

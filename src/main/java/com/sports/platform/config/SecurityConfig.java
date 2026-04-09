@@ -58,6 +58,8 @@ public class SecurityConfig {
                 .requestMatchers("/dashboard").authenticated()
                 // 个人中心 - 所有认证用户可访问
                 .requestMatchers("/profile/**").authenticated()
+                // 统计API - 所有认证用户可访问
+                .requestMatchers("/api/statistics/**").authenticated()
                 // 赛事管理 - 管理员和裁判可管理
                 .requestMatchers("/events/create", "/events/*/edit", "/events/*/delete").hasAnyRole("ADMIN", "REFEREE")
                 .requestMatchers("/events/**").hasAnyRole("ADMIN", "REFEREE", "ATHLETE", "SPECTATOR")
