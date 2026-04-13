@@ -54,7 +54,13 @@ public class RegistrationController {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
         
+        // 先获取该赛事的运动项目
         List<SportType> sportTypes = sportTypeRepository.findByEventId(eventId);
+        
+        // 如果赛事没有关联运动项目，获取所有启用的运动项目
+        if (sportTypes == null || sportTypes.isEmpty()) {
+            sportTypes = sportTypeRepository.findByEnabledTrueOrderBySortOrderAsc();
+        }
         
         model.addAttribute("event", event);
         model.addAttribute("sportTypes", sportTypes);
