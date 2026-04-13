@@ -51,10 +51,14 @@ public class Registration {
     @Column(length = 100)
     private String registrantOrg;
 
-    // 关联运动项目
+    // 关联运动项目（可选，自定义项目时为空）
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sport_type_id", nullable = false)
+    @JoinColumn(name = "sport_type_id")
     private SportType sportType;
+    
+    // 自定义运动项目名称（当没有选择预设项目时使用）
+    @Column(length = 50)
+    private String customSportTypeName;
 
     // 报名状态: PENDING(待审核), APPROVED(已通过), 
     // REJECTED(已拒绝), CANCELLED(已取消)

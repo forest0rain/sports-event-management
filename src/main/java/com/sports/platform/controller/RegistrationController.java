@@ -72,7 +72,8 @@ public class RegistrationController {
      */
     @PostMapping("/registrations")
     public String register(@RequestParam Long eventId,
-                          @RequestParam Long sportTypeId,
+                          @RequestParam(required = false) Long sportTypeId,
+                          @RequestParam(required = false) String sportTypeName,
                           @RequestParam String registrantName,
                           @RequestParam String registrantPhone,
                           @RequestParam(required = false) String registrantOrg,
@@ -81,8 +82,22 @@ public class RegistrationController {
                           RedirectAttributes redirectAttributes) {
         try {
             Long userId = getCurrentUserId(authentication);
-            registrationService.registerAsUser(eventId, userId, sportTypeId, 
-                    registrantName, registrantPhone, registrantOrg, remark);
+            
+            // 支持自定义项目名称
+            String finalSportTypeName = sportTypeName;
+            Long finalSportTypeId = sportTypeId;
+            
+            // 如果选择了预设项目，优先使用
+            if (sportTypeId != null && sportTypeId > 0) {
+                SportType sportType = sportTypeRepository.findById(sportTypeId)
+                        .orElseThrow(() -> new RuntimeException("运动项目不存在"));
+                finalSportTypeName = sportType.getName();
+            } else if (sportTypeName == null || sportTypeName.trim().isEmpty()) {
+                throw new RuntimeException("请选择或输入参赛项目");
+            }
+            
+            registrationService.registerAsUser(eventId, userId, finalSportTypeId, 
+                    finalSportTypeName, registrantName, registrantPhone, registrantOrg, remark);
             redirectAttributes.addFlashAttribute("success", "报名成功！");
             return "redirect:/registrations";
         } catch (Exception e) {

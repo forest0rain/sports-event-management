@@ -101,7 +101,7 @@ public class RegistrationService {
      * 普通用户报名参赛
      */
     @Transactional
-    public Registration registerAsUser(Long eventId, Long userId, Long sportTypeId,
+    public Registration registerAsUser(Long eventId, Long userId, Long sportTypeId, String sportTypeName,
                                         String registrantName, String registrantPhone, 
                                         String registrantOrg, String remark) {
         Event event = eventRepository.findById(eventId)
@@ -110,8 +110,18 @@ public class RegistrationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         
-        SportType sportType = sportTypeRepository.findById(sportTypeId)
-                .orElseThrow(() -> new RuntimeException("运动项目不存在"));
+        // 获取运动项目（可选）
+        SportType sportType = null;
+        String finalSportTypeName = sportTypeName;
+        if (sportTypeId != null && sportTypeId > 0) {
+            sportType = sportTypeRepository.findById(sportTypeId)
+                    .orElseThrow(() -> new RuntimeException("运动项目不存在"));
+            finalSportTypeName = sportType.getName();
+        }
+        
+        if (finalSportTypeName == null || finalSportTypeName.trim().isEmpty()) {
+            throw new RuntimeException("请选择或输入参赛项目");
+        }
 
         // 检查报名资格
         checkRegistrationScope(event, "USER");
@@ -146,6 +156,7 @@ public class RegistrationService {
                 .event(event)
                 .user(user)
                 .sportType(sportType)
+                .customSportTypeName(sportType == null ? finalSportTypeName : null)
                 .status(event.getRequireApproval() ? "PENDING" : "APPROVED")
                 .registrantName(registrantName)
                 .registrantPhone(registrantPhone)
@@ -157,14 +168,14 @@ public class RegistrationService {
 
         // 如果不需要审核，直接生成参赛号码
         if (!event.getRequireApproval()) {
-            String bibNumber = generateBibNumberForUser(registration);
+            String bibNumber = generateBibNumberForUser(registration, finalSportTypeName);
             registration.setBibNumber(bibNumber);
             event.setCurrentParticipants(event.getCurrentParticipants() + 1);
             eventRepository.save(event);
             registration = registrationRepository.save(registration);
         }
         
-        log.info("普通用户报名成功: {} - {} - {}", registrantName, event.getName(), sportType.getName());
+        log.info("普通用户报名成功: {} - {} - {}", registrantName, event.getName(), finalSportTypeName);
         
         return registration;
     }
@@ -220,9 +231,12 @@ public class RegistrationService {
 
         // 如果审核通过，生成参赛号码
         if ("APPROVED".equals(status)) {
+            String sportTypeName = registration.getSportType() != null 
+                    ? registration.getSportType().getName() 
+                    : registration.getCustomSportTypeName();
             String bibNumber = registration.getAthlete() != null 
                     ? generateBibNumber(registration) 
-                    : generateBibNumberForUser(registration);
+                    : generateBibNumberForUser(registration, sportTypeName);
             registration.setBibNumber(bibNumber);
             
             // 更新赛事参赛人数
@@ -258,11 +272,16 @@ public class RegistrationService {
     /**
      * 为普通用户生成参赛号码
      */
-    private String generateBibNumberForUser(Registration registration) {
+    private String generateBibNumberForUser(Registration registration, String sportTypeName) {
         // 格式: 项目代码 + U + 用户ID + 随机数
-        String sportCode = registration.getSportType().getCode();
-        if (sportCode == null) {
+        String sportCode;
+        if (registration.getSportType() != null && registration.getSportType().getCode() != null) {
+            sportCode = registration.getSportType().getCode();
+        } else if (registration.getSportType() != null) {
             sportCode = String.format("%03d", registration.getSportType().getId());
+        } else {
+            // 自定义项目使用项目名称前3位
+            sportCode = sportTypeName.length() >= 3 ? sportTypeName.substring(0, 3).toUpperCase() : sportTypeName.toUpperCase();
         }
         
         String userCode = "U" + String.format("%04d", registration.getUser().getId());

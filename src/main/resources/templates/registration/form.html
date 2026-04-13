@@ -122,13 +122,44 @@
                     <label class="form-label">
                         参赛项目 <span class="text-danger">*</span>
                     </label>
-                    <select name="sportTypeId" class="form-select" required>
+                    <select name="sportTypeId" id="sportTypeSelect" class="form-select" required onchange="handleSportTypeChange()">
                         <option value="">请选择参赛项目</option>
                         <option th:each="sport : ${sportTypes}" 
                                 th:value="${sport.id}" 
                                 th:text="${sport.name}">项目名称</option>
+                        <option value="other">其他（手动输入）</option>
                     </select>
                 </div>
+                
+                <!-- 手动输入参赛项目 -->
+                <div class="mb-3" id="customSportTypeDiv" style="display: none;">
+                    <label class="form-label">
+                        自定义参赛项目 <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" name="customSportType" id="customSportType" class="form-control"
+                           placeholder="请输入参赛项目名称，如：篮球、羽毛球">
+                </div>
+                
+                <script>
+                function handleSportTypeChange() {
+                    var select = document.getElementById('sportTypeSelect');
+                    var customDiv = document.getElementById('customSportTypeDiv');
+                    var customInput = document.getElementById('customSportType');
+                    
+                    if (select.value === 'other') {
+                        customDiv.style.display = 'block';
+                        customInput.required = true;
+                        // 清空隐藏域的sportTypeId，使用自定义项目名
+                        select.name = '_sportTypeId';
+                        customInput.name = 'sportTypeName';
+                    } else {
+                        customDiv.style.display = 'none';
+                        customInput.required = false;
+                        select.name = 'sportTypeId';
+                        customInput.name = '_customSportType';
+                    }
+                }
+                </script>
 
                 <!-- 姓名 -->
                 <div class="mb-3">
