@@ -204,7 +204,7 @@ public class RegistrationController {
                              RedirectAttributes redirectAttributes) {
         try {
             Long reviewerId = getCurrentUserId(authentication);
-            registrationService.batchReject(ids, reviewerId);
+            registrationService.batchReject(ids, reason, reviewerId);
             redirectAttributes.addFlashAttribute("success", "批量拒绝成功");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
