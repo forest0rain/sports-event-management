@@ -122,7 +122,7 @@
                     <label class="form-label">
                         参赛项目 <span class="text-danger">*</span>
                     </label>
-                    <select name="sportTypeId" id="sportTypeSelect" class="form-select" required onchange="handleSportTypeChange()">
+                    <select name="sportTypeId" id="sportTypeSelect" class="form-select" required>
                         <option value="">请选择参赛项目</option>
                         <option th:each="sport : ${sportTypes}" 
                                 th:value="${sport.id}" 
