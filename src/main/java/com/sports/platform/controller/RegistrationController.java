@@ -71,9 +71,9 @@ public class RegistrationController {
      * 提交报名
      */
     @PostMapping("/registrations")
-    public String register(@RequestParam Long eventId,
-                          @RequestParam(required = false) Long sportTypeId,
+    public String register(@RequestParam(required = false) String sportTypeId,
                           @RequestParam(required = false) String sportTypeName,
+                          @RequestParam Long eventId,
                           @RequestParam String registrantName,
                           @RequestParam String registrantPhone,
                           @RequestParam(required = false) String registrantOrg,
@@ -83,16 +83,22 @@ public class RegistrationController {
         try {
             Long userId = getCurrentUserId(authentication);
             
-            // 支持自定义项目名称
+            // 解析sportTypeId（可能是数字或"other"）
+            Long finalSportTypeId = null;
             String finalSportTypeName = sportTypeName;
-            Long finalSportTypeId = sportTypeId;
             
-            // 如果选择了预设项目，优先使用
-            if (sportTypeId != null && sportTypeId > 0) {
-                SportType sportType = sportTypeRepository.findById(sportTypeId)
-                        .orElseThrow(() -> new RuntimeException("运动项目不存在"));
-                finalSportTypeName = sportType.getName();
-            } else if (sportTypeName == null || sportTypeName.trim().isEmpty()) {
+            if (sportTypeId != null && !sportTypeId.isEmpty() && !"other".equals(sportTypeId)) {
+                try {
+                    finalSportTypeId = Long.parseLong(sportTypeId);
+                    SportType sportType = sportTypeRepository.findById(finalSportTypeId)
+                            .orElseThrow(() -> new RuntimeException("运动项目不存在"));
+                    finalSportTypeName = sportType.getName();
+                } catch (NumberFormatException e) {
+                    // 不是数字，忽略
+                }
+            }
+            
+            if (finalSportTypeName == null || finalSportTypeName.trim().isEmpty()) {
                 throw new RuntimeException("请选择或输入参赛项目");
             }
             
