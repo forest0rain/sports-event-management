@@ -54,12 +54,12 @@ public class RegistrationController {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
         
-        // 先获取该赛事的运动项目
-        List<SportType> sportTypes = sportTypeRepository.findByEventId(eventId);
+        // 获取所有启用的运动项目（校园赛事允许报名任意项目）
+        List<SportType> sportTypes = sportTypeRepository.findByEnabledTrueOrderBySortOrderAsc();
         
-        // 如果赛事没有关联运动项目，获取所有启用的运动项目
+        // 如果没有任何运动项目，打印警告
         if (sportTypes == null || sportTypes.isEmpty()) {
-            sportTypes = sportTypeRepository.findByEnabledTrueOrderBySortOrderAsc();
+            System.err.println("警告：系统中没有运动项目数据，请检查DataInitializer是否正确执行");
         }
         
         model.addAttribute("event", event);

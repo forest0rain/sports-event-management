@@ -27,7 +27,8 @@ public interface SportTypeRepository extends JpaRepository<SportType, Long> {
     /**
      * 根据赛事查询项目
      */
-    List<SportType> findByEventId(Long eventId);
+    @Query("SELECT s FROM SportType s WHERE s.event.id = :eventId")
+    List<SportType> findByEventId(@Param("eventId") Long eventId);
 
     /**
      * 查询个人项目
