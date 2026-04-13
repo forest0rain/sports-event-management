@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -79,6 +80,7 @@ public class EventController {
     /**
      * 创建赛事页面
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @GetMapping("/create")
     public String createPage(Model model) {
         model.addAttribute("event", new Event());
@@ -89,6 +91,7 @@ public class EventController {
     /**
      * 创建赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/create")
     public String create(@ModelAttribute Event event,
                         BindingResult result,
@@ -110,6 +113,7 @@ public class EventController {
     /**
      * 编辑赛事页面
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @GetMapping("/{id}/edit")
     public String editPage(@PathVariable Long id, Model model) {
         Event event = eventService.getEventById(id);
@@ -121,6 +125,7 @@ public class EventController {
     /**
      * 更新赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id,
                         @ModelAttribute Event event,
@@ -143,6 +148,7 @@ public class EventController {
     /**
      * 发布赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/publish")
     public String publish(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -157,6 +163,7 @@ public class EventController {
     /**
      * 开始赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/start")
     public String start(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -171,6 +178,7 @@ public class EventController {
     /**
      * 结束赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/finish")
     public String finish(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -185,6 +193,7 @@ public class EventController {
     /**
      * 取消赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/cancel")
     public String cancel(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -199,6 +208,7 @@ public class EventController {
     /**
      * 手动更新赛事状态
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/status")
     public String updateStatus(@PathVariable Long id, 
                               @RequestParam String status,
@@ -215,6 +225,7 @@ public class EventController {
     /**
      * 删除赛事
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {

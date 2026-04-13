@@ -26,4 +26,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
      * 检查角色代码是否存在
      */
     boolean existsByCode(String code);
+
+    boolean existsByName(String name);
 }

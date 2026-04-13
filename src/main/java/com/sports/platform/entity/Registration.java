@@ -12,8 +12,7 @@ import java.time.LocalDateTime;
  * 参赛报名实体类
  */
 @Entity
-@Table(name = "registration", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "athlete_id", "sport_type_id"}))
+@Table(name = "registration")
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,10 +29,27 @@ public class Registration {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    // 关联运动员
+    // 关联运动员（可选，非运动员报名时为空）
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "athlete_id", nullable = false)
+    @JoinColumn(name = "athlete_id")
     private Athlete athlete;
+
+    // 关联报名用户（非运动员报名时使用）
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    // 报名人姓名
+    @Column(length = 50)
+    private String registrantName;
+
+    // 报名人联系方式
+    @Column(length = 20)
+    private String registrantPhone;
+
+    // 报名人单位/班级
+    @Column(length = 100)
+    private String registrantOrg;
 
     // 关联运动项目
     @ManyToOne(fetch = FetchType.LAZY)

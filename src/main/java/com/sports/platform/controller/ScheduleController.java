@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -61,6 +62,7 @@ public class ScheduleController {
     /**
      * 智能编排页面
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @GetMapping("/generate")
     public String generatePage(@RequestParam Long eventId, Model model) {
         model.addAttribute("eventId", eventId);
@@ -70,6 +72,7 @@ public class ScheduleController {
     /**
      * 智能编排赛程
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/generate")
     public String generate(@RequestParam Long eventId,
                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -92,6 +95,7 @@ public class ScheduleController {
     /**
      * 创建赛程页面
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @GetMapping("/create")
     public String createPage(@RequestParam(required = false) Long eventId, Model model) {
         Schedule schedule = new Schedule();
@@ -106,6 +110,7 @@ public class ScheduleController {
     /**
      * 创建赛程
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @PostMapping("/create")
     public String create(@ModelAttribute Schedule schedule,
                         RedirectAttributes redirectAttributes) {

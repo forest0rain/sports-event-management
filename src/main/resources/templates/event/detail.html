@@ -8,214 +8,308 @@
     <title>赛事详情 - 体育赛事管理平台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .page-title {
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+        .card {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+        .card-header {
+            background: #fff;
+            border-bottom: 1px solid #eef1f4;
+            font-weight: 600;
+        }
+        .section-label {
+            color: #6c757d;
+            width: 120px;
+            white-space: nowrap;
+        }
+        .admin-only-tip {
+            font-size: 0.95rem;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" th:href="@{/dashboard}">
-                <i class="bi bi-trophy me-2"></i>体育赛事管理平台
+<!-- 导航栏 -->
+<div th:replace="~{fragments/navbar :: navbar(false)}"></div>
+
+<div class="container-fluid mt-4 mb-5">
+    <!-- 提示消息 -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}">操作成功</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">操作失败</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- 标题和按钮 -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="page-title" th:text="${event.name}">赛事详情</h2>
+        <div class="d-flex gap-2">
+            <a th:href="@{/events}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>返回列表
             </a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link text-white" th:href="@{/dashboard}">
-                    <i class="bi bi-house-door me-1"></i>主页
-                </a>
-            </div>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text text-white me-3">
-                    欢迎，<span sec:authentication="name">用户</span>
-                </span>
-                <a class="nav-link text-white" th:href="@{/logout}">
-                    <i class="bi bi-box-arrow-right me-1"></i>退出
-                </a>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container-fluid mt-4">
-        <!-- 提示消息 -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${success}">操作成功</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <!-- 仅管理员可见 -->
+            <a sec:authorize="hasRole('ADMIN')"
+               th:href="@{/events/{id}/edit(id=${event.id})}"
+               class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>编辑
+            </a>
         </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}">操作失败</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 th:text="${event.name}">赛事详情</h2>
-            <div>
-                <a th:href="@{/events}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>返回列表
-                </a>
-                <a th:href="@{/events/{id}/edit(id=${event.id})}" class="btn btn-primary">
-                    <i class="bi bi-pencil me-1"></i>编辑
-                </a>
-            </div>
-        </div>
+    </div>
 
-        <!-- 基本信息 -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">基本信息</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="text-muted" width="120">赛事名称</td>
-                                <td th:text="${event.name}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">简称</td>
-                                <td th:text="${event.shortName}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">赛事类型</td>
-                                <td th:text="${event.eventType}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">状态</td>
-                                <td>
-                                    <span th:if="${event.status == 'DRAFT'}" class="badge bg-secondary">草稿</span>
-                                    <span th:if="${event.status == 'REGISTRATION'}" class="badge bg-primary">报名中</span>
-                                    <span th:if="${event.status == 'ONGOING'}" class="badge bg-success">进行中</span>
-                                    <span th:if="${event.status == 'FINISHED'}" class="badge bg-info">已结束</span>
-                                    <span th:if="${event.status == 'CANCELLED'}" class="badge bg-danger">已取消</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="text-muted" width="120">开始日期</td>
-                                <td th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">结束日期</td>
-                                <td th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">报名截止</td>
-                                <td th:text="${event.registrationDeadline != null} ? ${#temporals.format(event.registrationDeadline, 'yyyy-MM-dd')} : '未设置'">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">参赛人数</td>
-                                <td>
-                                    <span th:text="${event.currentParticipants}">0</span> / 
-                                    <span th:text="${event.maxParticipants}">100</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <!-- 基本信息 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">基本信息</h5>
         </div>
-        
-        <!-- 赛事操作 -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">赛事操作</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="mb-3">快速操作（按流程执行）</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <form th:if="${event.status == 'DRAFT'}" th:action="@{/events/{id}/publish(id=${event.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-megaphone me-1"></i>发布赛事
-                                </button>
-                            </form>
-                            <form th:if="${event.status == 'REGISTRATION'}" th:action="@{/events/{id}/start(id=${event.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-play-fill me-1"></i>开始赛事
-                                </button>
-                            </form>
-                            <form th:if="${event.status == 'ONGOING'}" th:action="@{/events/{id}/finish(id=${event.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-info text-white">
-                                    <i class="bi bi-check-lg me-1"></i>结束赛事
-                                </button>
-                            </form>
-                            <form th:if="${event.status != 'CANCELLED' and event.status != 'FINISHED'}" th:action="@{/events/{id}/cancel(id=${event.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('确定要取消赛事吗？')">
-                                    <i class="bi bi-x-lg me-1"></i>取消赛事
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="mb-3">手动修改状态</h6>
-                        <form th:action="@{/events/{id}/status(id=${event.id})}" method="post" class="d-flex gap-2">
-                            <select name="status" class="form-select" style="width: auto;">
-                                <option value="DRAFT" th:selected="${event.status == 'DRAFT'}">草稿</option>
-                                <option value="REGISTRATION" th:selected="${event.status == 'REGISTRATION'}">报名中</option>
-                                <option value="ONGOING" th:selected="${event.status == 'ONGOING'}">进行中</option>
-                                <option value="FINISHED" th:selected="${event.status == 'FINISHED'}">已结束</option>
-                                <option value="CANCELLED" th:selected="${event.status == 'CANCELLED'}">已取消</option>
-                            </select>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="bi bi-arrow-repeat me-1"></i>更新状态
-                            </button>
-                        </form>
-                        <small class="text-muted mt-2 d-block">
-                            <i class="bi bi-info-circle me-1"></i>修改为"进行中"或"已结束"时，会自动同步日期
-                        </small>
-                    </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tr>
+                            <td class="section-label">赛事名称</td>
+                            <td th:text="${event.name}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="section-label">简称</td>
+                            <td th:text="${event.shortName}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="section-label">赛事类型</td>
+                            <td th:text="${event.eventType}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="section-label">状态</td>
+                            <td>
+                                <span th:if="${event.status == 'DRAFT'}" class="badge bg-secondary">草稿</span>
+                                <span th:if="${event.status == 'REGISTRATION'}" class="badge bg-primary">报名中</span>
+                                <span th:if="${event.status == 'ONGOING'}" class="badge bg-success">进行中</span>
+                                <span th:if="${event.status == 'FINISHED'}" class="badge bg-info text-dark">已结束</span>
+                                <span th:if="${event.status == 'CANCELLED'}" class="badge bg-danger">已取消</span>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-            </div>
-        </div>
-        
-        <!-- 组织信息 -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">组织信息</h5>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong class="text-muted">主办方</strong>
-                        <p th:text="${event.organizer} ?: '未设置'">-</p>
-                    </div>
-                    <div class="col-md-6">
-                        <strong class="text-muted">赞助商</strong>
-                        <p th:text="${event.sponsor} ?: '未设置'">-</p>
-                    </div>
+
+                <div class="col-md-6">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tr>
+                            <td class="section-label">开始日期</td>
+                            <td th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="section-label">结束日期</td>
+                            <td th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="section-label">报名截止</td>
+                            <td th:text="${event.registrationDeadline != null ? #temporals.format(event.registrationDeadline, 'yyyy-MM-dd') : '未设置'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="section-label">参赛人数</td>
+                            <td>
+                                <span th:text="${event.currentParticipants}">0</span> /
+                                <span th:text="${event.maxParticipants}">100</span>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                <div class="mb-3">
-                    <strong class="text-muted">赛事描述</strong>
-                    <p th:text="${event.description} ?: '未设置'">-</p>
-                </div>
-                <div class="mb-3">
-                    <strong class="text-muted">比赛规则</strong>
-                    <p th:text="${event.rules} ?: '未设置'">-</p>
-                </div>
-                <div class="mb-3">
-                    <strong class="text-muted">奖项设置</strong>
-                    <p th:text="${event.awards} ?: '未设置'">-</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 危险操作 -->
-        <div class="card border-danger">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">危险操作</h5>
-            </div>
-            <div class="card-body">
-                <form th:action="@{/events/{id}/delete(id=${event.id})}" method="post" 
-                      onsubmit="return confirm('确定要删除该赛事吗？此操作不可恢复！')">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i>删除赛事
-                    </button>
-                </form>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 管理员操作区 -->
+    <div sec:authorize="hasRole('ADMIN')" class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">赛事操作</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">快速操作（按流程执行）</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form th:if="${event.status == 'DRAFT'}"
+                              th:action="@{/events/{id}/publish(id=${event.id})}"
+                              method="post"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-megaphone me-1"></i>发布赛事
+                            </button>
+                        </form>
+
+                        <form th:if="${event.status == 'REGISTRATION'}"
+                              th:action="@{/events/{id}/start(id=${event.id})}"
+                              method="post"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-play-fill me-1"></i>开始赛事
+                            </button>
+                        </form>
+
+                        <form th:if="${event.status == 'ONGOING'}"
+                              th:action="@{/events/{id}/finish(id=${event.id})}"
+                              method="post"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-info text-white">
+                                <i class="bi bi-check-lg me-1"></i>结束赛事
+                            </button>
+                        </form>
+
+                        <form th:if="${event.status != 'CANCELLED' and event.status != 'FINISHED'}"
+                              th:action="@{/events/{id}/cancel(id=${event.id})}"
+                              method="post"
+                              class="d-inline">
+                            <button type="submit"
+                                    class="btn btn-outline-danger"
+                                    onclick="return confirm('确定要取消赛事吗？')">
+                                <i class="bi bi-x-lg me-1"></i>取消赛事
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="mb-3">手动修改状态</h6>
+                    <form th:action="@{/events/{id}/status(id=${event.id})}" method="post" class="d-flex gap-2 flex-wrap">
+                        <select name="status" class="form-select" style="width: 180px;">
+                            <option value="DRAFT" th:selected="${event.status == 'DRAFT'}">草稿</option>
+                            <option value="REGISTRATION" th:selected="${event.status == 'REGISTRATION'}">报名中</option>
+                            <option value="ONGOING" th:selected="${event.status == 'ONGOING'}">进行中</option>
+                            <option value="FINISHED" th:selected="${event.status == 'FINISHED'}">已结束</option>
+                            <option value="CANCELLED" th:selected="${event.status == 'CANCELLED'}">已取消</option>
+                        </select>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-arrow-repeat me-1"></i>更新状态
+                        </button>
+                    </form>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="bi bi-info-circle me-1"></i>修改为“进行中”或“已结束”时，会自动同步日期
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 非管理员提示 -->
+    <div sec:authorize="!hasAnyRole('ADMIN', 'REFEREE')" class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-1"></i>
+        您当前仅有查看权限，如需修改赛事信息请联系管理员。
+    </div>
+
+    <!-- 报名入口 - 仅报名中的赛事显示 -->
+    <div th:if="${event.status == 'REGISTRATION'}" class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-clipboard-plus me-2"></i>立即报名</h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <p class="mb-2">
+                        <strong>报名截止日期：</strong>
+                        <span th:text="${event.registrationDeadline != null ? #temporals.format(event.registrationDeadline, 'yyyy-MM-dd') : '未设置'}"></span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>剩余名额：</strong>
+                        <span th:text="${event.maxParticipants - event.currentParticipants}"></span>
+                        /
+                        <span th:text="${event.maxParticipants}"></span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>报名审核：</strong>
+                        <span th:if="${event.requireApproval}" class="badge bg-warning text-dark">需要审核</span>
+                        <span th:unless="${event.requireApproval}" class="badge bg-success">免审核</span>
+                    </p>
+                    <p class="mb-0 text-muted" th:if="${event.registrationScope == 'ATHLETE'}">
+                        <i class="bi bi-info-circle me-1"></i>注：此赛事仅限运动员报名参赛
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a th:href="@{/registrations/create(eventId=${event.id})}" 
+                       class="btn btn-primary btn-lg">
+                        <i class="bi bi-clipboard-plus me-1"></i>立即报名
+                    </a>
+                    <a th:href="@{/registrations}" class="btn btn-outline-primary ms-2">
+                        <i class="bi bi-list me-1"></i>我的报名
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 报名已截止提示 -->
+    <div th:if="${event.status != 'REGISTRATION' and event.status != 'CANCELLED' and event.status != 'FINISHED'}" 
+         class="alert alert-secondary mb-4">
+        <i class="bi bi-clock me-1"></i>
+        <span th:if="${event.status == 'DRAFT'}">该赛事尚未发布，暂时无法报名</span>
+        <span th:if="${event.status == 'ONGOING'}">该赛事正在进行中，报名已截止</span>
+    </div>
+
+    <!-- 组织信息 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">组织信息</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong class="text-muted">主办方</strong>
+                    <p class="mb-0 mt-2" th:text="${event.organizer != null and !#strings.isEmpty(event.organizer) ? event.organizer : '未设置'}">-</p>
+                </div>
+                <div class="col-md-6">
+                    <strong class="text-muted">赞助商</strong>
+                    <p class="mb-0 mt-2" th:text="${event.sponsor != null and !#strings.isEmpty(event.sponsor) ? event.sponsor : '未设置'}">-</p>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <strong class="text-muted">赛事描述</strong>
+                <p class="mb-0 mt-2" th:text="${event.description != null and !#strings.isEmpty(event.description) ? event.description : '未设置'}">-</p>
+            </div>
+
+            <div class="mb-3">
+                <strong class="text-muted">比赛规则</strong>
+                <p class="mb-0 mt-2" th:text="${event.rules != null and !#strings.isEmpty(event.rules) ? event.rules : '未设置'}">-</p>
+            </div>
+
+            <div class="mb-0">
+                <strong class="text-muted">奖项设置</strong>
+                <p class="mb-0 mt-2" th:text="${event.awards != null and !#strings.isEmpty(event.awards) ? event.awards : '未设置'}">-</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 危险操作：仅管理员可见 -->
+    <div sec:authorize="hasRole('ADMIN')" class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">危险操作</h5>
+        </div>
+        <div class="card-body">
+            <p class="admin-only-tip mb-3">
+                删除赛事后将无法恢复，请谨慎操作。
+            </p>
+            <form th:action="@{/events/{id}/delete(id=${event.id})}"
+                  method="post"
+                  onsubmit="return confirm('确定要删除该赛事吗？此操作不可恢复！')">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i>删除赛事
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

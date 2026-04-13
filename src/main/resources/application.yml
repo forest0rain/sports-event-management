@@ -82,4 +82,5 @@ app:
   default-page-size: 10
   max-page-size: 100
   upload:
-    dir: uploads
+    dir: D:/bishe/project_20260407_173604/projects/uploads
+

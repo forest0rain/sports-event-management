@@ -91,6 +91,7 @@ public class AuthController {
     /**
      * 仪表盘
      */
+    /*
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         // 添加待审核角色申请数量
@@ -98,6 +99,8 @@ public class AuthController {
         model.addAttribute("pendingCount", pendingCount);
         return "dashboard/index";
     }
+
+     */
 
     /**
      * 个人信息页面

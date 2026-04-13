@@ -82,6 +82,16 @@ public class Event {
     @Builder.Default
     private Boolean isPublic = true;
 
+    // 报名限制: ALL(所有人), ATHLETE(仅运动员), STUDENT(学生), STAFF(教职工)
+    @Column(length = 20)
+    @Builder.Default
+    private String registrationScope = "ALL";
+
+    // 报名是否需要审核
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean requireApproval = true;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdTime;

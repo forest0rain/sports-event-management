@@ -29,24 +29,43 @@
                         <i class="bi bi-house me-1"></i>首页
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- 管理员和裁判显示完整管理菜单 -->
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
                     <a class="nav-link" th:href="@{/events}">
                         <i class="bi bi-calendar-event me-1"></i>赛事管理
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/athletes}">
-                        <i class="bi bi-person-badge me-1"></i>运动员管理
-                    </a>
-                </li>
-                <li class="nav-item">
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
                     <a class="nav-link" th:href="@{/schedules}">
                         <i class="bi bi-clock me-1"></i>赛程管理
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
                     <a class="nav-link" th:href="@{/results}">
                         <i class="bi bi-graph-up me-1"></i>成绩管理
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
+                    <a class="nav-link" th:href="@{/admin/registrations}">
+                        <i class="bi bi-clipboard-check me-1"></i>报名审核
+                    </a>
+                </li>
+                <!-- 运动员和观众显示赛事浏览 -->
+                <li class="nav-item" sec:authorize="!hasAnyRole('ADMIN', 'REFEREE')">
+                    <a class="nav-link" th:href="@{/events/public}">
+                        <i class="bi bi-calendar-event me-1"></i>赛事列表
+                    </a>
+                </li>
+                <!-- 所有登录用户显示我的报名 -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/registrations}">
+                        <i class="bi bi-clipboard-plus me-1"></i>我的报名
+                    </a>
+                </li>
+                <!-- 管理员显示运动员管理 -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/athletes}">
+                        <i class="bi bi-person-badge me-1"></i>运动员管理
                     </a>
                 </li>
             </ul>

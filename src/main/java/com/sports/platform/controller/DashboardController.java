@@ -41,9 +41,9 @@ public class DashboardController {
         long totalResults = resultRepository.count();
         
         // 待审核报名数量
-        long pendingRegistrations = registrationRepository.findByStatus("PENDING", PageRequest.of(0, 1))
-                .map(page -> page.getTotalElements())
-                .orElse(0L);
+        long pendingRegistrations = registrationRepository
+                .findByStatus("PENDING", PageRequest.of(0, 1))
+                .getTotalElements();
         
         // 待审核角色申请数量（仅管理员）
         long pendingCount = roleApplicationRepository.countByStatus("PENDING");

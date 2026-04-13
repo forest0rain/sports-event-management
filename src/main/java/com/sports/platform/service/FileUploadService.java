@@ -67,8 +67,8 @@ public class FileUploadService {
         // 保存文件
         Path filePath = uploadPath.resolve(safeFilename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
         log.info("文件上传成功: {}", safeFilename);
+        log.info("文件保存完整路径: {}", filePath.toAbsolutePath());
 
         // 返回相对路径
         return "qualifications/" + safeFilename;

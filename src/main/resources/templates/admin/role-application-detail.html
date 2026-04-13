@@ -26,240 +26,222 @@
     </style>
 </head>
 <body class="bg-light">
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" th:href="@{/dashboard}">
-                <i class="bi bi-trophy me-2"></i>体育赛事管理平台
-            </a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link text-white" th:href="@{/dashboard}">
-                    <i class="bi bi-house-door me-1"></i>主页
-                </a>
-            </div>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text text-white me-3">
-                    欢迎，<span sec:authentication="name">用户</span>
-                </span>
-                <a class="nav-link text-white" th:href="@{/logout}">
-                    <i class="bi bi-box-arrow-right me-1"></i>退出
-                </a>
-            </div>
-        </div>
+<div th:replace="~{fragments/navbar :: navbar(false)}"></div>
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">首页</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/admin/role-applications}">角色审核</a></li>
+            <li class="breadcrumb-item active">申请详情</li>
+        </ol>
     </nav>
 
-    <div class="container py-4">
-        <!-- 面包屑 -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a th:href="@{/dashboard}">首页</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/admin/role-applications}">角色审核</a></li>
-                <li class="breadcrumb-item active">申请详情</li>
-            </ol>
-        </nav>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 
-        <!-- 提示消息 -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-            <i class="bi bi-check-circle me-2"></i>
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-circle me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- 主要内容区域 -->
-        <div th:if="${application != null}" class="row">
-            <!-- 左侧：申请人信息 -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-person me-2"></i>申请人信息</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center mb-3">
-                            <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" 
-                                 style="width: 80px; height: 80px;">
-                                <i class="bi bi-person-fill text-white" style="font-size: 2.5rem;"></i>
-                            </div>
-                        </div>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="info-label">用户名</td>
-                                <td class="info-value" th:text="${application.user?.['username'] ?: '未知'}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">真实姓名</td>
-                                <td class="info-value" th:text="${application.user?.['realName'] ?: '未知'}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">邮箱</td>
-                                <td class="info-value" th:text="${application.user?.['email'] ?: '未知'}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">联系电话</td>
-                                <td class="info-value" th:text="${application['contactPhone'] ?: '未填写'}">-</td>
-                            </tr>
-                        </table>
-                    </div>
+    <div th:if="${roleApplication != null}" class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person me-2"></i>申请人信息</h5>
                 </div>
-
-                <!-- 当前角色 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>当前角色</h5>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 2.5rem;"></i>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <th:block th:if="${application.user != null and application.user['roleNames'] != null}">
-                            <th:block th:each="roleName : ${application.user['roleNames']}">
-                                <span th:text="${roleName}" class="badge bg-secondary me-1 mb-1"></span>
-                            </th:block>
-                        </th:block>
-                        <th:block th:unless="${application.user != null and application.user['roleNames'] != null}">
-                            <span class="text-muted">未知</span>
-                        </th:block>
-                    </div>
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="info-label">用户名</td>
+                            <td class="info-value"
+                                th:text="${roleApplication['user'] != null and roleApplication['user']['username'] != null ? roleApplication['user']['username'] : '未知'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">真实姓名</td>
+                            <td class="info-value"
+                                th:text="${roleApplication['user'] != null and roleApplication['user']['realName'] != null ? roleApplication['user']['realName'] : '未知'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">邮箱</td>
+                            <td class="info-value"
+                                th:text="${roleApplication['user'] != null and roleApplication['user']['email'] != null ? roleApplication['user']['email'] : '未知'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">联系电话</td>
+                            <td class="info-value"
+                                th:text="${roleApplication['contactPhone'] != null ? roleApplication['contactPhone'] : '未填写'}">-</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
-            <!-- 右侧：申请详情 -->
-            <div class="col-md-8">
-                <!-- 申请状态卡片 -->
-                <div class="card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>申请信息</h5>
-                        <div>
-                            <span th:if="${application['status'] == 'PENDING'}" class="badge bg-warning fs-6">待审核</span>
-                            <span th:if="${application['status'] == 'APPROVED'}" class="badge bg-success fs-6">已通过</span>
-                            <span th:if="${application['status'] == 'REJECTED'}" class="badge bg-danger fs-6">已拒绝</span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="info-label" style="width: 120px;">申请角色</td>
-                                <td>
-                                    <span th:if="${application['requestedRole'] == 'ROLE_ATHLETE'}" class="badge bg-success fs-6">运动员</span>
-                                    <span th:if="${application['requestedRole'] == 'ROLE_REFEREE'}" class="badge bg-warning fs-6">裁判</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">申请时间</td>
-                                <td th:text="${#temporals.format(application['createdTime'], 'yyyy-MM-dd HH:mm:ss')}">-</td>
-                            </tr>
-                        </table>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>当前角色</h5>
+                </div>
+                <div class="card-body">
+                    <th:block th:if="${roleApplication['user'] != null and roleApplication['user']['roleNames'] != null}">
+                        <th:block th:each="roleName : ${roleApplication['user']['roleNames']}">
+                            <span th:text="${roleName}" class="badge bg-secondary me-1 mb-1"></span>
+                        </th:block>
+                    </th:block>
+                    <th:block th:unless="${roleApplication['user'] != null and roleApplication['user']['roleNames'] != null}">
+                        <span class="text-muted">未知</span>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>申请信息</h5>
+                    <div>
+                        <span th:if="${roleApplication['status'] == 'PENDING'}" class="badge bg-warning fs-6">待审核</span>
+                        <span th:if="${roleApplication['status'] == 'APPROVED'}" class="badge bg-success fs-6">已通过</span>
+                        <span th:if="${roleApplication['status'] == 'REJECTED'}" class="badge bg-danger fs-6">已拒绝</span>
                     </div>
                 </div>
-
-                <!-- 申请理由 -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>申请理由</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-0" th:text="${application['reason']}">申请理由内容</p>
-                    </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="info-label" style="width: 120px;">申请角色</td>
+                            <td>
+                                <span th:if="${roleApplication['requestedRole'] == 'ROLE_ATHLETE'}" class="badge bg-success fs-6">运动员</span>
+                                <span th:if="${roleApplication['requestedRole'] == 'ROLE_REFEREE'}" class="badge bg-warning fs-6">裁判</span>
+                                <span th:if="${roleApplication['requestedRole'] != 'ROLE_ATHLETE' and roleApplication['requestedRole'] != 'ROLE_REFEREE'}"
+                                      th:text="${roleApplication['requestedRole'] != null ? roleApplication['requestedRole'] : '-'}"
+                                      class="badge bg-secondary fs-6">-</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">申请时间</td>
+                            <td th:text="${roleApplication['createdTime'] != null ? #temporals.format(roleApplication['createdTime'], 'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
+                        </tr>
+                    </table>
                 </div>
+            </div>
 
-                <!-- 相关资质 -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-award me-2"></i>相关资质/证书</h5>
-                    </div>
-                    <div class="card-body">
-                        <p th:text="${application['qualification']}" class="mb-0">资质内容</p>
-                    </div>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>申请理由</h5>
                 </div>
+                <div class="card-body">
+                    <p class="mb-0" th:text="${roleApplication['reason'] != null ? roleApplication['reason'] : '-'}">申请理由内容</p>
+                </div>
+            </div>
 
-                <!-- 资质证明文件 -->
-                <div th:if="${not #strings.isEmpty(application['qualificationFile'])}" class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-file-earmark me-2"></i>资质证明文件</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="file-preview-card">
-                            <p class="text-muted">文件名: <span th:text="${application['qualificationFileName']}">-</span></p>
-                            <a th:href="@{/files/{path}(path=${application['qualificationFile']})}" 
-                               target="_blank" class="btn btn-primary btn-sm">
-                                <i class="bi bi-eye me-1"></i>查看文件
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-award me-2"></i>相关资质/证书</h5>
+                </div>
+                <div class="card-body">
+                    <p th:text="${roleApplication['qualification'] != null ? roleApplication['qualification'] : '-'}" class="mb-0">资质内容</p>
+                </div>
+            </div>
+
+            <div th:if="${roleApplication['qualificationFile'] != null and !#strings.isEmpty(roleApplication['qualificationFile'])}" class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark me-2"></i>资质证明文件</h5>
+                </div>
+                <div class="card-body">
+                    <div class="file-preview-card">
+                        <p class="text-muted">文件名:
+                            <span th:text="${roleApplication['qualificationFileName'] != null ? roleApplication['qualificationFileName'] : '-'}">-</span>
+                        </p>
+                        <a th:href="@{/files/{path}(path=${roleApplication['qualificationFile']})}"
+                           target="_blank" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>查看文件
+                            <a th:href="@{/files/download/{path}(path=${roleApplication['qualificationFile']})}"
+                               class="btn btn-success" style="margin-left:10px;">
+                                下载文件
                             </a>
-                        </div>
+                        </a>
                     </div>
-                </div>
+                    <img th:src="@{/files/{path}(path=${roleApplication['qualificationFile']})}"
+                         style="max-width:300px;margin-top:10px;">
 
-                <!-- 审核结果（已审核时显示） -->
-                <div th:if="${application['status'] != 'PENDING'}" class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>审核结果</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="info-label" style="width: 120px;">审核人</td>
-                                <td th:text="${application['reviewer'] != null ? application['reviewer']['realName'] : '-'}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">审核时间</td>
-                                <td th:text="${application['reviewTime'] != null ? #temporals.format(application['reviewTime'], 'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">审核意见</td>
-                                <td th:text="${application['reviewComment']}">-</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 操作按钮（待审核时显示） -->
-                <div th:if="${application['status'] == 'PENDING'}" class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>审核操作</h5>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="@{/admin/role-applications/{id}/approve(id=${application['id']})}" method="post" class="mb-3">
-                            <div class="mb-3">
-                                <label class="form-label">审核意见（可选）</label>
-                                <textarea class="form-control" name="comment" rows="2" placeholder="填写审核意见"></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-lg me-1"></i>通过申请
-                            </button>
-                        </form>
-                        <form th:action="@{/admin/role-applications/{id}/reject(id=${application['id']})}" method="post">
-                            <div class="mb-3">
-                                <label class="form-label">拒绝原因 <span class="text-danger">*</span></label>
-                                <textarea class="form-control" name="comment" rows="2" placeholder="请填写拒绝原因" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-x-lg me-1"></i>拒绝申请
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- 返回按钮 -->
-                <div class="mt-4">
-                    <a th:href="@{/admin/role-applications}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>返回列表
-                    </a>
                 </div>
             </div>
-        </div>
 
-        <!-- 空数据提示 -->
-        <div th:if="${application == null}" class="alert alert-warning">
-            <h5>数据异常</h5>
-            <p>申请记录不存在，请检查数据或返回列表。</p>
-            <div class="mt-3">
-                <a th:href="@{/admin/role-applications}" class="btn btn-primary">
+            <div th:if="${roleApplication['status'] != 'PENDING'}" class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>审核结果</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="info-label" style="width: 120px;">审核人</td>
+                            <td th:text="${roleApplication['reviewer'] != null and roleApplication['reviewer']['realName'] != null ? roleApplication['reviewer']['realName'] : '-'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">审核时间</td>
+                            <td th:text="${roleApplication['reviewTime'] != null ? #temporals.format(roleApplication['reviewTime'], 'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">审核意见</td>
+                            <td th:text="${roleApplication['reviewComment'] != null ? roleApplication['reviewComment'] : '-'}">-</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div th:if="${roleApplication['status'] == 'PENDING'}" class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>审核操作</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/role-applications/{id}/approve(id=${roleApplication['id']})}" method="post" class="mb-3">
+                        <div class="mb-3">
+                            <label class="form-label">审核意见（可选）</label>
+                            <textarea class="form-control" name="comment" rows="2" placeholder="填写审核意见"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>通过申请
+                        </button>
+                    </form>
+                    <form th:action="@{/admin/role-applications/{id}/reject(id=${roleApplication['id']})}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">拒绝原因 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="comment" rows="2" placeholder="请填写拒绝原因" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-lg me-1"></i>拒绝申请
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a th:href="@{/admin/role-applications}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>返回列表
                 </a>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div th:if="${roleApplication == null}" class="alert alert-warning">
+        <h5>数据异常</h5>
+        <p>申请记录不存在，请检查数据或返回列表。</p>
+        <div class="mt-3">
+            <a th:href="@{/admin/role-applications}" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-1"></i>返回列表
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

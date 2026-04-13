@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛事报名 - 体育赛事管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .registration-card {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/dashboard}">
+            <i class="bi bi-trophy me-2"></i>体育赛事管理平台
+        </a>
+        <div class="navbar-nav me-auto">
+            <a class="nav-link" th:href="@{/dashboard}">
+                <i class="bi bi-house-door me-1"></i>首页
+            </a>
+            <a class="nav-link" th:href="@{/events}">
+                <i class="bi bi-calendar-event me-1"></i>赛事列表
+            </a>
+            <a class="nav-link" th:href="@{/registrations}">
+                <i class="bi bi-clipboard-check me-1"></i>我的报名
+            </a>
+        </div>
+        <div class="navbar-nav ms-auto">
+            <span class="navbar-text text-white me-3">
+                欢迎, <span sec:authentication="name">用户</span>
+            </span>
+            <a class="nav-link text-white" th:href="@{/logout}">
+                <i class="bi bi-box-arrow-right me-1"></i>退出
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <!-- 提示消息 -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-clipboard-plus me-2"></i>赛事报名</h2>
+        <a th:href="@{/events/{id}(id=${event.id})}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回赛事详情
+        </a>
+    </div>
+
+    <!-- 赛事信息卡片 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">赛事信息</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-2">
+                        <strong>赛事名称：</strong>
+                        <span th:text="${event.name}"></span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>赛事类型：</strong>
+                        <span th:text="${event.eventType}"></span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>赛事时间：</strong>
+                        <span th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}"></span>
+                        至
+                        <span th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}"></span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-2">
+                        <strong>报名截止：</strong>
+                        <span th:text="${event.registrationDeadline != null ? #temporals.format(event.registrationDeadline, 'yyyy-MM-dd') : '未设置'}"></span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>已报名人数：</strong>
+                        <span th:text="${event.currentParticipants}"></span>
+                        /
+                        <span th:text="${event.maxParticipants}"></span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>报名是否需要审核：</strong>
+                        <span th:if="${event.requireApproval}" class="badge bg-warning text-dark">需要审核</span>
+                        <span th:unless="${event.requireApproval}" class="badge bg-success">免审核</span>
+                    </p>
+                </div>
+            </div>
+            <div th:if="${event.description}" class="mt-3">
+                <strong>赛事描述：</strong>
+                <p class="text-muted" th:text="${event.description}"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 报名表单 -->
+    <div class="card registration-card">
+        <div class="card-header">
+            <h5 class="mb-0">填写报名信息</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/registrations}" method="post">
+                <input type="hidden" name="eventId" th:value="${event.id}" />
+
+                <!-- 参赛项目选择 -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        参赛项目 <span class="text-danger">*</span>
+                    </label>
+                    <select name="sportTypeId" class="form-select" required>
+                        <option value="">请选择参赛项目</option>
+                        <option th:each="sport : ${sportTypes}" 
+                                th:value="${sport.id}" 
+                                th:text="${sport.name}">项目名称</option>
+                    </select>
+                </div>
+
+                <!-- 姓名 -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        姓名 <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" name="registrantName" class="form-control" required
+                           placeholder="请输入您的真实姓名">
+                </div>
+
+                <!-- 联系方式 -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        联系方式 <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" name="registrantPhone" class="form-control" required
+                           placeholder="请输入手机号码" pattern="[0-9]{11}">
+                </div>
+
+                <!-- 单位/班级 -->
+                <div class="mb-3">
+                    <label class="form-label">单位/班级</label>
+                    <input type="text" name="registrantOrg" class="form-control"
+                           placeholder="请输入您的单位或班级">
+                </div>
+
+                <!-- 备注 -->
+                <div class="mb-3">
+                    <label class="form-label">备注</label>
+                    <textarea name="remark" class="form-control" rows="3"
+                              placeholder="如有特殊要求请在此说明"></textarea>
+                </div>
+
+                <!-- 提示信息 -->
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span th:if="${event.requireApproval}">
+                        您的报名需要审核，审核通过后您将收到通知。
+                    </span>
+                    <span th:unless="${event.requireApproval}">
+                        您的报名将直接通过审核，请注意查收参赛号码。
+                    </span>
+                </div>
+
+                <!-- 按钮 -->
+                <div class="d-flex justify-content-between">
+                    <a th:href="@{/events/{id}(id=${event.id})}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>取消
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>提交报名
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
