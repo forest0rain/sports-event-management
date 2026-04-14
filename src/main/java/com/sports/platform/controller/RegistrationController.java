@@ -59,7 +59,7 @@ public class RegistrationController {
         
         model.addAttribute("event", event);
         model.addAttribute("sportTypes", sportTypes);
-        return "registration/create";
+        return "registration/form";
     }
 
     /**
