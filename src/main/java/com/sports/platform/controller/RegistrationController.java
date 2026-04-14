@@ -12,10 +12,8 @@ import com.sports.platform.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -133,7 +131,8 @@ public class RegistrationController {
             registrations = registrationService.getRegistrationsByEvent(eventId, PageRequest.of(page, 20));
             model.addAttribute("eventId", eventId);
         } else {
-            registrations = registrationService.getAllRegistrations(PageRequest.of(page, 20));
+            // 使用 getPendingRegistrations 代替不存在的 getAllRegistrations
+            registrations = registrationService.getPendingRegistrations(PageRequest.of(page, 20));
         }
         
         model.addAttribute("registrations", registrations);
@@ -141,7 +140,7 @@ public class RegistrationController {
     }
 
     /**
-     * 管理员 - 审核报名
+     * 管理员 - 审核报名（通过）
      */
     @PostMapping("/admin/registrations/{id}/approve")
     @PreAuthorize("hasRole('ADMIN') or hasRole('REFEREE')")
@@ -155,8 +154,9 @@ public class RegistrationController {
             RedirectAttributes redirectAttributes) {
         
         try {
-            String username = authentication.getName();
-            registrationService.approveRegistration(id, bibNumber, lane, group, comment, username);
+            Long reviewerId = getCurrentUserId(authentication);
+            // 使用 reviewRegistration 方法代替 approveRegistration
+            registrationService.reviewRegistration(id, "APPROVED", comment, reviewerId);
             redirectAttributes.addFlashAttribute("success", "审核通过！");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -177,8 +177,9 @@ public class RegistrationController {
             RedirectAttributes redirectAttributes) {
         
         try {
-            String username = authentication.getName();
-            registrationService.rejectRegistration(id, comment, username);
+            Long reviewerId = getCurrentUserId(authentication);
+            // 使用 reviewRegistration 方法代替 rejectRegistration
+            registrationService.reviewRegistration(id, "REJECTED", comment, reviewerId);
             redirectAttributes.addFlashAttribute("success", "已拒绝该报名");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -195,14 +196,5 @@ public class RegistrationController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         return user.getId();
-    }
-
-    /**
-     * 检查用户是否拥有特定角色
-     */
-    private boolean hasRole(Authentication authentication, String role) {
-        return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> auth.equals(role));
     }
 }
