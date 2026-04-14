@@ -73,4 +73,9 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
      */
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.id = :eventId AND r.status = 'APPROVED'")
     Long countApprovedByEventId(@Param("eventId") Long eventId);
+
+    /**
+     * 查询赛事已通过的报名列表
+     */
+    List<Registration> findByEventIdAndStatus(Long eventId, String status);
 }

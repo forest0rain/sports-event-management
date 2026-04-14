@@ -52,7 +52,7 @@ public class ScheduleService {
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
 
         // 获取已审核通过的报名
-        List<Registration> registrations = registrationRepository.findApprovedByEventId(eventId);
+        List<Registration> registrations = registrationRepository.findByEventIdAndStatus(eventId, "APPROVED");
         if (registrations.isEmpty()) {
             throw new RuntimeException("暂无已审核的报名，无法生成赛程");
         }
