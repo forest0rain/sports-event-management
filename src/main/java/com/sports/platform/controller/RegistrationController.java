@@ -5,6 +5,7 @@ import com.sports.platform.entity.Registration;
 import com.sports.platform.entity.SportType;
 import com.sports.platform.entity.User;
 import com.sports.platform.repository.EventRepository;
+import com.sports.platform.repository.RegistrationRepository;
 import com.sports.platform.repository.SportTypeRepository;
 import com.sports.platform.repository.UserRepository;
 import com.sports.platform.service.RegistrationService;
@@ -18,6 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 public class RegistrationController {
 
     private final RegistrationService registrationService;
+    private final RegistrationRepository registrationRepository;
     private final EventRepository eventRepository;
     private final SportTypeRepository sportTypeRepository;
     private final UserRepository userRepository;
@@ -41,7 +44,8 @@ public class RegistrationController {
     @GetMapping("/registrations")
     public String myRegistrations(Authentication authentication, Model model) {
         Long userId = getCurrentUserId(authentication);
-        List<Registration> registrations = registrationService.getRegistrationsByUser(userId);
+        // 使用 JOIN FETCH 查询，加载关联的 Event 和 SportType
+        List<Registration> registrations = registrationRepository.findByUserIdWithDetails(userId);
         model.addAttribute("registrations", registrations);
         return "registration/list";
     }
@@ -58,178 +62,162 @@ public class RegistrationController {
         List<SportType> sportTypes = sportTypeRepository.findByEnabledTrueOrderBySortOrderAsc();
         
         // 如果没有任何运动项目，打印警告
-        if (sportTypes == null || sportTypes.isEmpty()) {
-            System.err.println("警告：系统中没有运动项目数据，请检查DataInitializer是否正确执行");
+        if (sportTypes.isEmpty()) {
+            System.out.println("警告: 数据库中没有启用的运动项目！");
         }
         
         model.addAttribute("event", event);
         model.addAttribute("sportTypes", sportTypes);
-        return "registration/form";
+        return "registration/create";
     }
 
     /**
      * 提交报名
      */
     @PostMapping("/registrations")
-    public String register(@RequestParam Long eventId,
-                          @RequestParam String sportTypeName,
-                          @RequestParam String registrantName,
-                          @RequestParam String registrantPhone,
-                          @RequestParam(required = false) String registrantOrg,
-                          @RequestParam(required = false) String remark,
-                          Authentication authentication,
-                          RedirectAttributes redirectAttributes) {
+    public String submitRegistration(
+            @RequestParam Long eventId,
+            @RequestParam(required = false) Long sportTypeId,
+            @RequestParam(required = false) String customSportTypeName,
+            @RequestParam String registrantName,
+            @RequestParam String registrantPhone,
+            @RequestParam(required = false) String registrantOrg,
+            @RequestParam(required = false) String group,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        
         try {
-            Long userId = getCurrentUserId(authentication);
-            
-            if (sportTypeName == null || sportTypeName.trim().isEmpty()) {
-                throw new RuntimeException("请输入参赛项目");
-            }
-            
-            registrationService.registerAsUser(eventId, userId, null, 
-                    sportTypeName.trim(), registrantName, registrantPhone, registrantOrg, remark);
-            redirectAttributes.addFlashAttribute("success", "报名成功！");
-            return "redirect:/registrations";
+            User user = getCurrentUser(authentication);
+            registrationService.register(
+                    eventId, 
+                    sportTypeId, 
+                    customSportTypeName,
+                    registrantName, 
+                    registrantPhone, 
+                    registrantOrg,
+                    group,
+                    user);
+            redirectAttributes.addFlashAttribute("success", "报名成功！请等待审核。");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/registrations/create?eventId=" + eventId;
         }
+        
+        return "redirect:/registrations";
     }
 
     /**
      * 取消报名
      */
     @PostMapping("/registrations/{id}/cancel")
-    public String cancel(@PathVariable Long id,
-                        Authentication authentication,
-                        RedirectAttributes redirectAttributes) {
+    public String cancelRegistration(
+            @PathVariable Long id,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        
         try {
             registrationService.cancelRegistration(id);
             redirectAttributes.addFlashAttribute("success", "报名已取消");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        
         return "redirect:/registrations";
     }
 
     /**
-     * 管理员/裁判 - 报名审核列表
+     * 管理员 - 查看赛事报名列表
      */
     @GetMapping("/admin/registrations")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
-    public String adminList(@RequestParam(required = false) Long eventId,
-                           @RequestParam(required = false) String status,
-                           @RequestParam(defaultValue = "0") int page,
-                           @RequestParam(defaultValue = "20") int size,
-                           Model model) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdTime").descending());
+    @PreAuthorize("hasRole('ADMIN') or hasRole('REFEREE')")
+    public String adminRegistrationList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Long eventId,
+            Model model) {
         
         Page<Registration> registrations;
-        if (eventId != null && status != null && !status.isEmpty()) {
-            // 根据赛事和状态筛选
-            registrations = registrationService.getRegistrationsByEvent(eventId, pageRequest);
-            registrations = registrations.map(r -> r);
-        } else if (eventId != null) {
-            registrations = registrationService.getRegistrationsByEvent(eventId, pageRequest);
-        } else if (status != null && !status.isEmpty()) {
-            registrations = registrationService.getRegistrationsByStatus(status, pageRequest);
+        if (eventId != null) {
+            registrations = registrationService.getRegistrationsByEvent(eventId, PageRequest.of(page, 20));
+            model.addAttribute("eventId", eventId);
         } else {
-            registrations = registrationService.getPendingRegistrations(pageRequest);
+            registrations = registrationService.getAllRegistrations(PageRequest.of(page, 20));
         }
-        
-        List<Event> events = eventRepository.findAll();
         
         model.addAttribute("registrations", registrations);
-        model.addAttribute("events", events);
-        model.addAttribute("eventId", eventId);
-        model.addAttribute("status", status);
-        model.addAttribute("statusList", List.of("PENDING", "APPROVED", "REJECTED", "CANCELLED"));
-        
-        return "admin/registrations";
+        return "admin/registration-list";
     }
 
     /**
-     * 审核通过
+     * 管理员 - 审核报名
      */
     @PostMapping("/admin/registrations/{id}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
-    public String approve(@PathVariable Long id,
-                        @RequestParam(required = false) String comment,
-                        Authentication authentication,
-                        RedirectAttributes redirectAttributes) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('REFEREE')")
+    public String approveRegistration(
+            @PathVariable Long id,
+            @RequestParam(required = false) String bibNumber,
+            @RequestParam(required = false) Integer lane,
+            @RequestParam(required = false) String group,
+            @RequestParam(required = false) String comment,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        
         try {
-            Long reviewerId = getCurrentUserId(authentication);
-            registrationService.reviewRegistration(id, "APPROVED", comment, reviewerId);
-            redirectAttributes.addFlashAttribute("success", "报名已通过");
+            String username = authentication.getName();
+            registrationService.approveRegistration(id, bibNumber, lane, group, comment, username);
+            redirectAttributes.addFlashAttribute("success", "审核通过！");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        
         return "redirect:/admin/registrations";
     }
 
     /**
-     * 审核拒绝
+     * 管理员 - 拒绝报名
      */
     @PostMapping("/admin/registrations/{id}/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
-    public String reject(@PathVariable Long id,
-                        @RequestParam String reason,
-                        Authentication authentication,
-                        RedirectAttributes redirectAttributes) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public String rejectRegistration(
+            @PathVariable Long id,
+            @RequestParam String comment,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        
         try {
-            Long reviewerId = getCurrentUserId(authentication);
-            registrationService.reviewRegistration(id, "REJECTED", reason, reviewerId);
-            redirectAttributes.addFlashAttribute("success", "报名已拒绝");
+            String username = authentication.getName();
+            registrationService.rejectRegistration(id, comment, username);
+            redirectAttributes.addFlashAttribute("success", "已拒绝该报名");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        
         return "redirect:/admin/registrations";
     }
 
     /**
-     * 批量审核通过
-     */
-    @PostMapping("/admin/registrations/batch-approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
-    public String batchApprove(@RequestParam List<Long> ids,
-                              Authentication authentication,
-                              RedirectAttributes redirectAttributes) {
-        try {
-            Long reviewerId = getCurrentUserId(authentication);
-            registrationService.batchApprove(ids, reviewerId);
-            redirectAttributes.addFlashAttribute("success", "批量审核成功");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/registrations";
-    }
-
-    /**
-     * 批量审核拒绝
-     */
-    @PostMapping("/admin/registrations/batch-reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
-    public String batchReject(@RequestParam List<Long> ids,
-                             @RequestParam String reason,
-                             Authentication authentication,
-                             RedirectAttributes redirectAttributes) {
-        try {
-            Long reviewerId = getCurrentUserId(authentication);
-            registrationService.batchReject(ids, reason, reviewerId);
-            redirectAttributes.addFlashAttribute("success", "批量拒绝成功");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/registrations";
-    }
-
-    /**
-     * 获取当前登录用户ID
+     * 获取当前登录用户的ID
      */
     private Long getCurrentUserId(Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         return user.getId();
+    }
+
+    /**
+     * 获取当前登录用户
+     */
+    private User getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+    }
+
+    /**
+     * 检查用户是否拥有特定角色
+     */
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(auth -> auth.equals(role));
     }
 }

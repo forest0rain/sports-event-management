@@ -4,7 +4,6 @@ import com.sports.platform.entity.Registration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -49,37 +48,23 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     List<Registration> findByEventIdAndSportTypeId(Long eventId, Long sportTypeId);
 
     /**
-     * 查询已审核通过的报名
+     * 根据用户ID查询报名列表，同时加载关联的Event和SportType
+     * 解决懒加载导致的 null 问题
      */
-    @Query("SELECT r FROM Registration r WHERE r.event.id = :eventId AND r.status = 'APPROVED'")
-    List<Registration> findApprovedByEventId(@Param("eventId") Long eventId);
+    @Query("SELECT r FROM Registration r " +
+           "LEFT JOIN FETCH r.event " +
+           "LEFT JOIN FETCH r.sportType " +
+           "WHERE r.user.id = :userId " +
+           "ORDER BY r.createdTime DESC")
+    List<Registration> findByUserIdWithDetails(@Param("userId") Long userId);
 
     /**
-     * 统计赛事报名人数
+     * 根据赛事ID查询报名列表，同时加载关联的Event和SportType
      */
-    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.id = :eventId AND r.status = 'APPROVED'")
-    Long countApprovedByEventId(@Param("eventId") Long eventId);
-
-    /**
-     * 更新报名状态
-     */
-    @Modifying
-    @Query("UPDATE Registration r SET r.status = :status WHERE r.id = :id")
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
-
-    /**
-     * 根据赛事和状态统计数量
-     */
-    @Query("SELECT r.status, COUNT(r) FROM Registration r WHERE r.event.id = :eventId GROUP BY r.status")
-    List<Object[]> countByEventIdAndStatus(@Param("eventId") Long eventId);
-
-    /**
-     * 根据用户查询报名
-     */
-    List<Registration> findByUserId(Long userId);
-
-    /**
-     * 根据赛事和状态查询报名
-     */
-    List<Registration> findByEventIdAndStatus(Long eventId, String status);
+    @Query("SELECT r FROM Registration r " +
+           "LEFT JOIN FETCH r.event " +
+           "LEFT JOIN FETCH r.sportType " +
+           "WHERE r.event.id = :eventId " +
+           "ORDER BY r.createdTime DESC")
+    List<Registration> findByEventIdWithDetails(@Param("eventId") Long eventId);
 }
