@@ -19,11 +19,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 报名管理控制器
@@ -58,13 +56,8 @@ public class RegistrationController {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
         
-        // 获取所有启用的运动项目（校园赛事允许报名任意项目）
+        // 获取所有启用的运动项目
         List<SportType> sportTypes = sportTypeRepository.findByEnabledTrueOrderBySortOrderAsc();
-        
-        // 如果没有任何运动项目，打印警告
-        if (sportTypes.isEmpty()) {
-            System.out.println("警告: 数据库中没有启用的运动项目！");
-        }
         
         model.addAttribute("event", event);
         model.addAttribute("sportTypes", sportTypes);
@@ -87,16 +80,17 @@ public class RegistrationController {
             RedirectAttributes redirectAttributes) {
         
         try {
-            User user = getCurrentUser(authentication);
-            registrationService.register(
+            Long userId = getCurrentUserId(authentication);
+            // 使用 registerAsUser 方法
+            registrationService.registerAsUser(
                     eventId, 
+                    userId,
                     sportTypeId, 
                     customSportTypeName,
                     registrantName, 
                     registrantPhone, 
                     registrantOrg,
-                    group,
-                    user);
+                    null);
             redirectAttributes.addFlashAttribute("success", "报名成功！请等待审核。");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -201,15 +195,6 @@ public class RegistrationController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         return user.getId();
-    }
-
-    /**
-     * 获取当前登录用户
-     */
-    private User getCurrentUser(Authentication authentication) {
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
     }
 
     /**
