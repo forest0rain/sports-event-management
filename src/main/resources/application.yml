@@ -19,13 +19,20 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
+  
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:data.sql
   
   # Thymeleaf配置
   thymeleaf:
