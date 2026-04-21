@@ -23,7 +23,6 @@ public class RegistrationService {
 
     private final RegistrationRepository registrationRepository;
     private final EventRepository eventRepository;
-    private final athleteRepository athleteRepository;
     private final SportTypeRepository sportTypeRepository;
     private final UserRepository userRepository;
 
@@ -31,12 +30,9 @@ public class RegistrationService {
      * 运动员报名参赛
      */
     @Transactional
-    public Registration register(Long eventId, Long athleteId, Long sportTypeId, String seedScore, String remark) {
+    public Registration register(Long eventId, Long athleteId, Long sportTypeId, String group, String seedScore, String remark) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
-        
-        Athlete athlete = athleteRepository.findById(athleteId)
-                .orElseThrow(() -> new RuntimeException("运动员不存在"));
         
         SportType sportType = sportTypeRepository.findById(sportTypeId)
                 .orElseThrow(() -> new RuntimeException("运动项目不存在"));
@@ -61,8 +57,6 @@ public class RegistrationService {
             throw new RuntimeException("报名人数已满");
         }
 
-        String group = athlete.getGender().equals("M") ? "男子组" : "女子组";
-
         Registration registration = Registration.builder()
                 .eventId(eventId)
                 .athleteId(athleteId)
@@ -70,7 +64,6 @@ public class RegistrationService {
                 .status(event.getRequireApproval() ? "PENDING" : "APPROVED")
                 .group(group)
                 .seedScore(seedScore)
-                .remark(remark)
                 .build();
 
         registration = registrationRepository.save(registration);
