@@ -71,7 +71,7 @@ public class ScheduleService {
         // ========== 第一阶段: 分组 ==========
         // 按运动项目分组
         Map<Long, List<Registration>> registrationsBySport = registrations.stream()
-                .collect(Collectors.groupingBy(r -> r.getSportType().getId()));
+                .collect(Collectors.groupingBy(Registration::getSportTypeId));
 
         // 按性别进一步细分
         Map<String, List<Registration>> groupKeyMap = new HashMap<>();
