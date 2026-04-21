@@ -98,7 +98,7 @@ public class RegistrationService {
             throw new RuntimeException("已过报名截止日期");
         }
 
-        List<Registration> existingRegs = registrationRepository.findByUserId(userId);
+        List<Registration> existingRegs = registrationRepository.findByAthleteIdOrderByCreatedTimeDesc(userId);
         boolean alreadyRegistered = existingRegs.stream()
                 .anyMatch(r -> r.getEventId().equals(eventId) && !"CANCELLED".equals(r.getStatus()));
         if (alreadyRegistered) {
@@ -264,7 +264,7 @@ public class RegistrationService {
      * 根据用户获取报名列表
      */
     public List<Registration> getRegistrationsByUser(Long userId) {
-        return registrationRepository.findByUserId(userId);
+        return registrationRepository.findByAthleteIdOrderByCreatedTimeDesc(userId);
     }
 
     /**
