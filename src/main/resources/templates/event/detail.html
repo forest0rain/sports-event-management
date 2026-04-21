@@ -107,15 +107,15 @@
                     <table class="table table-borderless align-middle mb-0">
                         <tr>
                             <td class="section-label">开始日期</td>
-                            <td th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}">-</td>
+                            <td th:text="${@dateTimeFormatUtil.formatDate(event.startDate)}">-</td>
                         </tr>
                         <tr>
                             <td class="section-label">结束日期</td>
-                            <td th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}">-</td>
+                            <td th:text="${@dateTimeFormatUtil.formatDate(event.endDate)}">-</td>
                         </tr>
                         <tr>
                             <td class="section-label">报名截止</td>
-                            <td th:text="${event.registrationDeadline != null ? #temporals.format(event.registrationDeadline, 'yyyy-MM-dd') : '未设置'}">-</td>
+                            <td th:text="${event.registrationDeadline != null ? @dateTimeFormatUtil.formatDate(event.registrationDeadline) : '未设置'}">-</td>
                         </tr>
                         <tr>
                             <td class="section-label">参赛人数</td>
@@ -218,7 +218,7 @@
                 <div class="col-md-8">
                     <p class="mb-2">
                         <strong>报名截止日期：</strong>
-                        <span th:text="${event.registrationDeadline != null ? #temporals.format(event.registrationDeadline, 'yyyy-MM-dd') : '未设置'}"></span>
+                        <span th:text="${event.registrationDeadline != null ? @dateTimeFormatUtil.formatDate(event.registrationDeadline) : '未设置'}"></span>
                     </p>
                     <p class="mb-2">
                         <strong>剩余名额：</strong>

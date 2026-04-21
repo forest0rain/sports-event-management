@@ -78,15 +78,15 @@
                     </p>
                     <p class="mb-2">
                         <strong>赛事时间：</strong>
-                        <span th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}"></span>
+                        <span th:text="${@dateTimeFormatUtil.formatDate(event.startDate)}"></span>
                         至
-                        <span th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}"></span>
+                        <span th:text="${@dateTimeFormatUtil.formatDate(event.endDate)}"></span>
                     </p>
                 </div>
                 <div class="col-md-6">
                     <p class="mb-2">
                         <strong>报名截止：</strong>
-                        <span th:text="${event.registrationDeadline != null ? #temporals.format(event.registrationDeadline, 'yyyy-MM-dd') : '未设置'}"></span>
+                        <span th:text="${event.registrationDeadline != null ? @dateTimeFormatUtil.formatDate(event.registrationDeadline) : '未设置'}"></span>
                     </p>
                     <p class="mb-2">
                         <strong>已报名人数：</strong>

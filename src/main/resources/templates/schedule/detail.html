@@ -67,11 +67,11 @@
                             </tr>
                             <tr>
                                 <td class="text-muted">比赛日期</td>
-                                <td th:text="${#temporals.format(schedule.date, 'yyyy-MM-dd')}">-</td>
+                                <td th:text="${schedule.date != null ? @dateTimeFormatUtil.formatDate(schedule.date) : '-'}">-</td>
                             </tr>
                             <tr>
                                 <td class="text-muted">比赛时间</td>
-                                <td th:text="${#temporals.format(schedule.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(schedule.endTime, 'HH:mm')}">-</td>
+                                <td th:text="${(schedule.startTime != null ? @dateTimeFormatUtil.formatTime(schedule.startTime) : '') + ' - ' + (schedule.endTime != null ? @dateTimeFormatUtil.formatTime(schedule.endTime) : '')}">-</td>
                             </tr>
                         </table>
                     </div>

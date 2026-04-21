@@ -1,9 +1,9 @@
 package com.sports.platform.config;
 
+import com.sports.platform.util.DateTimeFormatUtil;
 import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.thymeleaf.extras.java8time.dialect.Java8TimeDialect;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -22,11 +22,12 @@ public class ThymeleafConfig implements WebMvcConfigurer {
     }
 
     /**
-     * Thymeleaf Java 8 Time Dialect - 用于日期时间格式化
+     * 日期时间格式化工具类 - 用于 Thymeleaf 模板
+     * 在模板中使用: ${@dateTimeFormatUtil.formatDate(event.startDate)}
      */
     @Bean
-    public Java8TimeDialect java8TimeDialect() {
-        return new Java8TimeDialect();
+    public DateTimeFormatUtil dateTimeFormatUtil() {
+        return new DateTimeFormatUtil();
     }
 
     /**

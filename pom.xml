@@ -66,13 +66,6 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
         
-        <!-- Thymeleaf Java 8 Time Support -->
-        <dependency>
-            <groupId>org.thymeleaf.extras</groupId>
-            <artifactId>thymeleaf-extras-java8time</artifactId>
-            <version>3.0.5.RELEASE</version>
-        </dependency>
-        
         <!-- MySQL Driver -->
         <dependency>
             <groupId>com.mysql</groupId>

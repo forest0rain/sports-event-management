@@ -90,7 +90,7 @@
                             </tr>
                             <tr>
                                 <td class="text-muted">录入时间</td>
-                                <td th:text="${#temporals.format(result.createdTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                                <td th:text="${result.createdTime != null ? @dateTimeFormatUtil.formatDateTime(result.createdTime) : '-'}">-</td>
                             </tr>
                         </table>
                     </div>

@@ -64,7 +64,7 @@
                             </tr>
                             <tr>
                                 <td class="text-muted">出生日期</td>
-                                <td th:text="${#temporals.format(athlete.birthDate, 'yyyy-MM-dd')}">-</td>
+                                <td th:text="${athlete.birthDate != null ? @dateTimeFormatUtil.formatDate(athlete.birthDate) : '-'}">-</td>
                             </tr>
                             <tr>
                                 <td class="text-muted">年龄组</td>
