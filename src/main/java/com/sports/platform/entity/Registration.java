@@ -20,6 +20,18 @@ public class Registration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false, insertable = false, updatable = false)
+    private Event event;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "athlete_id", nullable = false, insertable = false, updatable = false)
+    private Athlete athlete;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sport_type_id", nullable = false, insertable = false, updatable = false)
+    private SportType sportType;
+    
     @Column(name = "event_id", nullable = false)
     private Long eventId;
     
