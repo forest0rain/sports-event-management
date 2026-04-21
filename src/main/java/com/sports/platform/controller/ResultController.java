@@ -239,7 +239,7 @@ public class ResultController {
         // 获取前5个赛事及其报名情况
         List<Object[]> data = new java.util.ArrayList<>();
         eventRepository.findAll(PageRequest.of(0, 5)).getContent().forEach(event -> {
-            Long currentCount = registrationRepository.countApprovedByEventId(event.getId());
+            Long currentCount = registrationRepository.countByEventIdAndStatus(event.getId(), "APPROVED");
             data.add(new Object[]{event.getName(), event.getMaxParticipants(), currentCount});
         });
         return data;

@@ -28,6 +28,16 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     Page<Registration> findByAthleteId(Long athleteId, Pageable pageable);
 
     /**
+     * 统计某赛事的已批准报名数
+     */
+    long countByEventIdAndStatus(Long eventId, String status);
+
+    /**
+     * 统计某赛事所有报名数
+     */
+    long countByEventId(Long eventId);
+
+    /**
      * 根据状态查询报名
      */
     Page<Registration> findByStatus(String status, Pageable pageable);

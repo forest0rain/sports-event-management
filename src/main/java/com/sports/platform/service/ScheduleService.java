@@ -30,6 +30,7 @@ public class ScheduleService {
     private final SportTypeRepository sportTypeRepository;
     private final VenueRepository venueRepository;
     private final RegistrationRepository registrationRepository;
+    private final AthleteRepository athleteRepository;
 
     /**
      * 智能赛程编排算法 - 分阶段贪婪策略
@@ -75,8 +76,22 @@ public class ScheduleService {
         // 按性别进一步细分
         Map<String, List<Registration>> groupKeyMap = new HashMap<>();
         registrationsBySport.forEach((sportId, regs) -> {
-            Map<String, List<Registration>> byGender = regs.stream()
-                    .collect(Collectors.groupingBy(r -> r.getAthlete().getGender()));
+	            // 获取所有相关运动员信息
+	            List<Long> athleteIds = regs.stream()
+	                    .map(Registration::getAthleteId)
+	                    .filter(Objects::nonNull)
+	                    .distinct()
+	                    .collect(Collectors.toList());
+	            Map<Long, String> athleteGenderMap = athleteRepository.findAllById(athleteIds).stream()
+	                    .collect(Collectors.toMap(Athlete::getId, Athlete::getGender));
+
+	            Map<String, List<Registration>> byGender = regs.stream()
+	                    .collect(Collectors.groupingBy(r -> {
+	                        if (r.getAthleteId() != null) {
+	                            return athleteGenderMap.getOrDefault(r.getAthleteId(), "Unknown");
+	                        }
+	                        return r.getGroup() != null ? r.getGroup() : "Unknown";
+	                    }));
             byGender.forEach((gender, list) -> {
                 String key = sportId + "_" + gender;
                 groupKeyMap.put(key, list);

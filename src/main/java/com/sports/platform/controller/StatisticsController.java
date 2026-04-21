@@ -107,7 +107,7 @@ public class StatisticsController {
     private List<Object[]> getEventRegistrationData() {
         List<Object[]> data = new ArrayList<>();
         eventRepository.findAll(PageRequest.of(0, 10)).getContent().forEach(event -> {
-            Long currentCount = registrationRepository.countApprovedByEventId(event.getId());
+            Long currentCount = registrationRepository.countByEventIdAndStatus(event.getId(), "APPROVED");
             data.add(new Object[]{event.getName(), event.getMaxParticipants(), currentCount});
         });
         return data;
