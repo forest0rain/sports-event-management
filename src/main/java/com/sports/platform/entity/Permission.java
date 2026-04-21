@@ -35,9 +35,6 @@ public class Permission {
     @Column(length = 200)
     private String resource;
 
-    @Column(length = 20)
-    private String method;
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdTime;
