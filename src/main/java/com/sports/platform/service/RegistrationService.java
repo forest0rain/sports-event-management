@@ -23,7 +23,7 @@ public class RegistrationService {
 
     private final RegistrationRepository registrationRepository;
     private final EventRepository eventRepository;
-    private final AthleteRepository athleteRepository;
+    private final athleteRepository athleteRepository;
     private final SportTypeRepository sportTypeRepository;
     private final UserRepository userRepository;
 
@@ -41,49 +41,40 @@ public class RegistrationService {
         SportType sportType = sportTypeRepository.findById(sportTypeId)
                 .orElseThrow(() -> new RuntimeException("运动项目不存在"));
 
-        // 检查报名资格
         checkRegistrationScope(event, "ATHLETE");
 
-        // 检查赛事状态
         if (!"REGISTRATION".equals(event.getStatus())) {
             throw new RuntimeException("赛事不在报名阶段");
         }
 
-        // 检查报名截止日期
         if (event.getRegistrationDeadline() != null && 
             LocalDateTime.now().isAfter(event.getRegistrationDeadline().atTime(23, 59, 59))) {
             throw new RuntimeException("已过报名截止日期");
         }
 
-        // 检查是否已报名
         if (registrationRepository.existsByEventIdAndAthleteId(eventId, athleteId)) {
             throw new RuntimeException("该运动员已报名此赛事");
         }
 
-        // 检查人数限制
         if (event.getMaxParticipants() != null && 
             event.getCurrentParticipants() >= event.getMaxParticipants()) {
             throw new RuntimeException("报名人数已满");
         }
 
-        // 确定组别
         String group = athlete.getGender().equals("M") ? "男子组" : "女子组";
 
-        // 创建报名
         Registration registration = Registration.builder()
-                .event(event)
-                .athlete(athlete)
-                .sportType(sportType)
+                .eventId(eventId)
+                .athleteId(athleteId)
+                .sportTypeId(sportTypeId)
                 .status(event.getRequireApproval() ? "PENDING" : "APPROVED")
                 .group(group)
                 .seedScore(seedScore)
                 .remark(remark)
-                .registrantName(athlete.getName())
                 .build();
 
         registration = registrationRepository.save(registration);
 
-        // 如果不需要审核，直接生成参赛号码
         if (!event.getRequireApproval()) {
             String bibNumber = generateBibNumber(registration);
             registration.setBibNumber(bibNumber);
@@ -92,7 +83,7 @@ public class RegistrationService {
             registration = registrationRepository.save(registration);
         }
         
-        log.info("运动员报名成功: {} - {} - {}", athlete.getName(), event.getName(), sportType.getName());
+        log.info("运动员报名成功: {} - {} - {}", athleteId, event.getName(), sportType.getName());
         
         return registration;
     }
@@ -101,80 +92,51 @@ public class RegistrationService {
      * 普通用户报名参赛
      */
     @Transactional
-    public Registration registerAsUser(Long eventId, Long userId, Long sportTypeId,
-                                        String registrantName, String registrantPhone, 
-                                        String registrantOrg, String remark) {
+    public Registration registerAsUser(Long eventId, Long userId, Long sportTypeId, String group, String remark) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
-        
-        // 获取运动项目
-        SportType sportType = null;
-        if (sportTypeId != null && sportTypeId > 0) {
-            sportType = sportTypeRepository.findById(sportTypeId)
-                    .orElseThrow(() -> new RuntimeException("运动项目不存在"));
-        }
-        
-        if (sportType == null) {
-            throw new RuntimeException("请选择参赛项目");
-        }
-        
-        String sportTypeName = sportType.getName();
-
-        // 检查报名资格
-        checkRegistrationScope(event, "USER");
-
-        // 检查赛事状态
         if (!"REGISTRATION".equals(event.getStatus())) {
             throw new RuntimeException("赛事不在报名阶段");
         }
 
-        // 检查报名截止日期
         if (event.getRegistrationDeadline() != null && 
             LocalDateTime.now().isAfter(event.getRegistrationDeadline().atTime(23, 59, 59))) {
             throw new RuntimeException("已过报名截止日期");
         }
 
-        // 检查是否已报名（根据userId检查）
         List<Registration> existingRegs = registrationRepository.findByUserId(userId);
         boolean alreadyRegistered = existingRegs.stream()
-                .anyMatch(r -> r.getEvent().getId().equals(eventId) && !"CANCELLED".equals(r.getStatus()));
+                .anyMatch(r -> r.getEventId().equals(eventId) && !"CANCELLED".equals(r.getStatus()));
         if (alreadyRegistered) {
             throw new RuntimeException("您已报名此赛事");
         }
 
-        // 检查人数限制
         if (event.getMaxParticipants() != null && 
             event.getCurrentParticipants() >= event.getMaxParticipants()) {
             throw new RuntimeException("报名人数已满");
         }
 
-        // 创建报名
         Registration registration = Registration.builder()
-                .event(event)
-                .user(user)
-                .sportType(sportType)
+                .eventId(eventId)
+                .athleteId(userId)
+                .sportTypeId(sportTypeId)
                 .status(event.getRequireApproval() ? "PENDING" : "APPROVED")
-                .registrantName(registrantName)
-                .registrantPhone(registrantPhone)
-                .registrantOrg(registrantOrg)
+                .group(group)
                 .remark(remark)
                 .build();
 
         registration = registrationRepository.save(registration);
 
-        // 如果不需要审核，直接生成参赛号码
         if (!event.getRequireApproval()) {
-            String bibNumber = generateBibNumberForUser(registration, sportTypeName);
+            String bibNumber = generateBibNumberForUser(registration);
             registration.setBibNumber(bibNumber);
             event.setCurrentParticipants(event.getCurrentParticipants() + 1);
             eventRepository.save(event);
             registration = registrationRepository.save(registration);
         }
         
-        log.info("普通用户报名成功: {} - {} - {}", registrantName, event.getName(), sportTypeName);
+        log.info("普通用户报名成功: {} - {}", userId, event.getName());
         
         return registration;
     }
@@ -190,19 +152,15 @@ public class RegistrationService {
         
         switch (scope) {
             case "ALL":
-                // 所有人都可以报名
                 break;
             case "ATHLETE":
-                // 只有运动员可以报名
                 if (!"ATHLETE".equals(userType)) {
                     throw new RuntimeException("此赛事仅允许运动员报名");
                 }
                 break;
             case "STUDENT":
-                // 学生可以报名（需要扩展角色检查）
                 break;
             case "STAFF":
-                // 教职工可以报名（需要扩展角色检查）
                 break;
             default:
                 break;
@@ -210,7 +168,7 @@ public class RegistrationService {
     }
 
     /**
-     * 审核报名(管理员/裁判)
+     * 审核报名
      */
     @Transactional
     public Registration reviewRegistration(Long id, String status, String comment, Long reviewerId) {
@@ -220,34 +178,26 @@ public class RegistrationService {
             throw new RuntimeException("该报名已审核");
         }
 
-        User reviewer = userRepository.findById(reviewerId)
-                .orElseThrow(() -> new RuntimeException("审核人不存在"));
-
         registration.setStatus(status);
         registration.setReviewComment(comment);
-        registration.setReviewer(reviewer);
+        registration.setReviewerId(reviewerId);
         registration.setReviewTime(LocalDateTime.now());
 
-        // 如果审核通过，生成参赛号码
         if ("APPROVED".equals(status)) {
-            String sportTypeName = registration.getSportType() != null 
-                    ? registration.getSportType().getName() 
-                    : "未知项目";
-            String bibNumber = registration.getAthlete() != null 
-                    ? generateBibNumber(registration) 
-                    : generateBibNumberForUser(registration, sportTypeName);
+            String bibNumber = generateBibNumber(registration);
             registration.setBibNumber(bibNumber);
             
-            // 更新赛事参赛人数
-            Event event = registration.getEvent();
-            event.setCurrentParticipants(event.getCurrentParticipants() + 1);
-            eventRepository.save(event);
+            Event event = registrationRepository.findById(id).get().getEventId() != null 
+                    ? eventRepository.findById(registrationRepository.findById(id).get().getEventId()).orElse(null) : null;
+            if (event != null) {
+                event.setCurrentParticipants(event.getCurrentParticipants() + 1);
+                eventRepository.save(event);
+            }
         }
 
         registration = registrationRepository.save(registration);
         
-        String registrantName = registration.getRegistrantName();
-        log.info("报名审核完成: {} - {}", registrantName, status);
+        log.info("报名审核完成: {} - {}", id, status);
         
         return registration;
     }
@@ -256,13 +206,8 @@ public class RegistrationService {
      * 生成参赛号码
      */
     private String generateBibNumber(Registration registration) {
-        // 格式: 项目代码 + 运动员ID + 随机数
-        String sportCode = registration.getSportType().getCode();
-        if (sportCode == null) {
-            sportCode = String.format("%03d", registration.getSportType().getId());
-        }
-        
-        String athleteCode = String.format("%04d", registration.getAthlete().getId());
+        String sportCode = String.format("%03d", registration.getSportTypeId());
+        String athleteCode = String.format("%04d", registration.getAthleteId());
         String randomCode = UUID.randomUUID().toString().substring(0, 3).toUpperCase();
         
         return sportCode + athleteCode + randomCode;
@@ -271,19 +216,9 @@ public class RegistrationService {
     /**
      * 为普通用户生成参赛号码
      */
-    private String generateBibNumberForUser(Registration registration, String sportTypeName) {
-        // 格式: 项目代码 + U + 用户ID + 随机数
-        String sportCode;
-        if (registration.getSportType() != null && registration.getSportType().getCode() != null) {
-            sportCode = registration.getSportType().getCode();
-        } else if (registration.getSportType() != null) {
-            sportCode = String.format("%03d", registration.getSportType().getId());
-        } else {
-            // 自定义项目使用项目名称前3位
-            sportCode = sportTypeName.length() >= 3 ? sportTypeName.substring(0, 3).toUpperCase() : sportTypeName.toUpperCase();
-        }
-        
-        String userCode = "U" + String.format("%04d", registration.getUser().getId());
+    private String generateBibNumberForUser(Registration registration) {
+        String sportCode = String.format("%03d", registration.getSportTypeId());
+        String userCode = "U" + String.format("%04d", registration.getAthleteId());
         String randomCode = UUID.randomUUID().toString().substring(0, 3).toUpperCase();
         
         return sportCode + userCode + randomCode;
@@ -297,16 +232,17 @@ public class RegistrationService {
         Registration registration = getRegistrationById(id);
         
         if ("APPROVED".equals(registration.getStatus())) {
-            // 减少赛事参赛人数
-            Event event = registration.getEvent();
-            event.setCurrentParticipants(Math.max(0, event.getCurrentParticipants() - 1));
-            eventRepository.save(event);
+            Event event = eventRepository.findById(registration.getEventId()).orElse(null);
+            if (event != null) {
+                event.setCurrentParticipants(Math.max(0, event.getCurrentParticipants() - 1));
+                eventRepository.save(event);
+            }
         }
 
         registration.setStatus("CANCELLED");
         registrationRepository.save(registration);
         
-        log.info("取消报名: {}", registration.getRegistrantName());
+        log.info("取消报名: {}", id);
     }
 
     /**

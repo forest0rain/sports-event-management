@@ -40,8 +40,7 @@ public class RegistrationController {
     @GetMapping("/registrations")
     public String myRegistrations(Authentication authentication, Model model) {
         Long userId = getCurrentUserId(authentication);
-        // 使用 JOIN FETCH 查询，加载关联的 Event 和 SportType
-        List<Registration> registrations = registrationRepository.findByUserIdWithDetails(userId);
+        List<Registration> registrations = registrationRepository.findByAthleteIdOrderByCreatedTimeDesc(userId);
         model.addAttribute("registrations", registrations);
         return "registration/list";
     }
@@ -54,7 +53,6 @@ public class RegistrationController {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("赛事不存在"));
         
-        // 获取所有启用的运动项目
         List<SportType> sportTypes = sportTypeRepository.findByEnabledTrueOrderBySortOrderAsc();
         
         model.addAttribute("event", event);
@@ -69,24 +67,14 @@ public class RegistrationController {
     public String submitRegistration(
             @RequestParam Long eventId,
             @RequestParam(required = false) Long sportTypeId,
-            @RequestParam String registrantName,
-            @RequestParam String registrantPhone,
-            @RequestParam(required = false) String registrantOrg,
             @RequestParam(required = false) String group,
+            @RequestParam(required = false) String remark,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         
         try {
             Long userId = getCurrentUserId(authentication);
-            // 使用 registerAsUser 方法
-            registrationService.registerAsUser(
-                    eventId, 
-                    userId,
-                    sportTypeId, 
-                    registrantName, 
-                    registrantPhone, 
-                    registrantOrg,
-                    null);
+            registrationService.registerAsUser(eventId, userId, sportTypeId, group, remark);
             redirectAttributes.addFlashAttribute("success", "报名成功！请等待审核。");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -129,7 +117,6 @@ public class RegistrationController {
             registrations = registrationService.getRegistrationsByEvent(eventId, PageRequest.of(page, 20));
             model.addAttribute("eventId", eventId);
         } else {
-            // 使用 getPendingRegistrations 代替不存在的 getAllRegistrations
             registrations = registrationService.getPendingRegistrations(PageRequest.of(page, 20));
         }
         
@@ -153,7 +140,6 @@ public class RegistrationController {
         
         try {
             Long reviewerId = getCurrentUserId(authentication);
-            // 使用 reviewRegistration 方法代替 approveRegistration
             registrationService.reviewRegistration(id, "APPROVED", comment, reviewerId);
             redirectAttributes.addFlashAttribute("success", "审核通过！");
         } catch (Exception e) {
@@ -176,7 +162,6 @@ public class RegistrationController {
         
         try {
             Long reviewerId = getCurrentUserId(authentication);
-            // 使用 reviewRegistration 方法代替 rejectRegistration
             registrationService.reviewRegistration(id, "REJECTED", comment, reviewerId);
             redirectAttributes.addFlashAttribute("success", "已拒绝该报名");
         } catch (Exception e) {

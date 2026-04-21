@@ -48,31 +48,9 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     List<Registration> findByEventIdAndSportTypeId(Long eventId, Long sportTypeId);
 
     /**
-     * 根据用户ID查询报名列表，同时加载关联的Event和SportType
-     * 解决懒加载导致的 null 问题
+     * 根据用户ID查询报名列表（用于普通用户）
      */
-    @Query("SELECT r FROM Registration r " +
-           "LEFT JOIN FETCH r.event " +
-           "LEFT JOIN FETCH r.sportType " +
-           "WHERE r.user.id = :userId " +
-           "ORDER BY r.createdTime DESC")
-    List<Registration> findByUserIdWithDetails(@Param("userId") Long userId);
-
-    /**
-     * 根据赛事ID查询报名列表，同时加载关联的Event和SportType
-     */
-    @Query("SELECT r FROM Registration r " +
-           "LEFT JOIN FETCH r.event " +
-           "LEFT JOIN FETCH r.sportType " +
-           "WHERE r.event.id = :eventId " +
-           "ORDER BY r.createdTime DESC")
-    List<Registration> findByEventIdWithDetails(@Param("eventId") Long eventId);
-
-    /**
-     * 统计赛事已通过的报名数量
-     */
-    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.id = :eventId AND r.status = 'APPROVED'")
-    Long countApprovedByEventId(@Param("eventId") Long eventId);
+    List<Registration> findByAthleteIdOrderByCreatedTimeDesc(Long athleteId);
 
     /**
      * 查询赛事已通过的报名列表
@@ -94,6 +72,6 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     /**
      * 按状态统计赛事报名数量
      */
-    @Query("SELECT r.status, COUNT(r) FROM Registration r WHERE r.event.id = :eventId GROUP BY r.status")
+    @Query("SELECT r.status, COUNT(r) FROM Registration r WHERE r.eventId = :eventId GROUP BY r.status")
     List<Object[]> countByEventIdAndStatus(@Param("eventId") Long eventId);
 }

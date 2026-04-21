@@ -85,16 +85,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <!-- 调试信息 -->
-        <div class="alert alert-info mb-4">
-            <h6><i class="bi bi-bug me-2"></i>调试信息</h6>
-            <p class="mb-1">registrations 存在: <span th:text="${registrations != null}">未知</span></p>
-            <p class="mb-0">registrations 大小: <span th:text="${registrations?.size() ?: 0}">0</span></p>
-            <div th:if="${registrations != null and not #lists.isEmpty(registrations)}">
-                <p class="mb-0">第1条数据 event.name: <span th:text="${registrations[0]?.event?.name}">未知</span></p>
-            </div>
-        </div>
-
         <!-- 报名列表 -->
         <div th:if="${registrations != null and not #lists.isEmpty(registrations)}" class="row">
             <div th:each="reg : ${registrations}" class="col-md-6 col-lg-4 mb-4">
@@ -124,21 +114,21 @@
 
                     <!-- 卡片内容 -->
                     <div class="card-body">
-                        <h5 class="card-title mb-3" th:text="${reg.event?.name ?: '未知赛事'}">赛事名称</h5>
+                        <h5 class="card-title mb-3">报名详情</h5>
                         
                         <div class="mb-2">
-                            <i class="bi bi-calendar3 text-primary me-2"></i>
-                            <span th:text="${reg.event?.startDate != null ? @dateTimeFormatUtil.formatDate(reg.event.startDate) : '待定'}">日期</span>
+                            <i class="bi bi-hash text-primary me-2"></i>
+                            报名ID: <span th:text="${reg.id}">-</span>
                         </div>
                         
                         <div class="mb-2">
-                            <i class="bi bi-geo-alt text-danger me-2"></i>
-                            <span th:text="${reg.event?.location ?: '待定'}">地点</span>
+                            <i class="bi bi-calendar3 text-info me-2"></i>
+                            赛事ID: <span th:text="${reg.eventId}">-</span>
                         </div>
 
                         <div class="mb-3">
                             <i class="bi bi-sport me-2"></i>
-                            <span th:text="${reg.sportType?.name ?: '未知项目'}">运动项目</span>
+                            项目ID: <span th:text="${reg.sportTypeId}">-</span>
                         </div>
 
                         <hr>
@@ -146,13 +136,9 @@
                         <div class="small text-muted">
                             <div class="mb-1">
                                 <i class="bi bi-person me-2"></i>
-                                报名人: <span th:text="${reg.registrantName}">-</span>
+                                参赛号码: <span th:text="${reg.bibNumber ?: '-'}">-</span>
                             </div>
                             <div class="mb-1">
-                                <i class="bi bi-telephone me-2"></i>
-                                电话: <span th:text="${reg.registrantPhone}">-</span>
-                            </div>
-                            <div>
                                 <i class="bi bi-clock me-2"></i>
                                 报名时间: <span th:text="${reg.createdTime != null ? @dateTimeFormatUtil.formatDateTime(reg.createdTime) : '-'}">-</span>
                             </div>
@@ -185,7 +171,7 @@
                         <th:block th:elif="${reg.status == 'REJECTED'}">
                             <div class="alert alert-danger small mb-0 py-2">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
-                                <span th:text="${reg.rejectReason ?: '您的报名未通过审核'}">审核未通过</span>
+                                您的报名未通过审核
                             </div>
                         </th:block>
                     </div>
