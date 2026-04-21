@@ -68,11 +68,6 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     List<Registration> findByEventIdAndStatus(Long eventId, String status);
 
     /**
-     * 根据用户ID查询报名列表
-     */
-    List<Registration> findByUserId(Long userId);
-
-    /**
      * 根据赛事ID查询已通过的报名列表
      */
     default List<Registration> findApprovedByEventId(Long eventId) {
