@@ -69,7 +69,6 @@ public class RegistrationController {
     public String submitRegistration(
             @RequestParam Long eventId,
             @RequestParam(required = false) Long sportTypeId,
-            @RequestParam(required = false) String customSportTypeName,
             @RequestParam String registrantName,
             @RequestParam String registrantPhone,
             @RequestParam(required = false) String registrantOrg,
@@ -84,7 +83,6 @@ public class RegistrationController {
                     eventId, 
                     userId,
                     sportTypeId, 
-                    customSportTypeName,
                     registrantName, 
                     registrantPhone, 
                     registrantOrg,
