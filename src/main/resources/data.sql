@@ -3,22 +3,22 @@
 -- ============================================
 
 -- 插入权限
-INSERT IGNORE INTO sys_permission (id, name, code, description, resource, method) VALUES
-(1, '用户管理', 'user:manage', '用户管理权限', '/api/users/**', 'GET'),
-(2, '角色管理', 'role:manage', '角色管理权限', '/api/roles/**', 'GET'),
-(3, '赛事管理', 'event:manage', '赛事管理权限', '/api/events/**', 'POST'),
-(4, '报名管理', 'registration:manage', '报名管理权限', '/api/registrations/**', 'POST'),
-(5, '场地管理', 'venue:manage', '场地管理权限', '/api/venues/**', 'POST'),
-(6, '赛事查看', 'event:view', '赛事查看权限', '/api/events/**', 'GET'),
-(7, '报名查看', 'registration:view', '报名查看权限', '/api/registrations/**', 'GET'),
-(8, '角色申请', 'role:apply', '角色申请权限', '/api/role-applications/**', 'POST');
+INSERT IGNORE INTO sys_permission (id, name, code, description, resource) VALUES
+(1, 'User Management', 'user:manage', 'User Management Permission', '/api/users/**'),
+(2, 'Role Management', 'role:manage', 'Role Management Permission', '/api/roles/**'),
+(3, 'Event Management', 'event:manage', 'Event Management Permission', '/api/events/**'),
+(4, 'Registration Management', 'registration:manage', 'Registration Management Permission', '/api/registrations/**'),
+(5, 'Venue Management', 'venue:manage', 'Venue Management Permission', '/api/venues/**'),
+(6, 'Event View', 'event:view', 'Event View Permission', '/api/events/**'),
+(7, 'Registration View', 'registration:view', 'Registration View Permission', '/api/registrations/**'),
+(8, 'Role Apply', 'role:apply', 'Role Apply Permission', '/api/role-applications/**');
 
 -- 插入角色
-INSERT IGNORE INTO sys_role (id, name, code, description, enabled) VALUES
-(1, '管理员', 'ADMIN', '系统管理员', TRUE),
-(2, '运动员', 'ATHLETE', '运动员', TRUE),
-(3, '裁判', 'REFEREE', '裁判', TRUE),
-(4, '观众', 'SPECTATOR', '观众', TRUE);
+INSERT IGNORE INTO sys_role (id, name, code, description) VALUES
+(1, 'Admin', 'ADMIN', 'System Administrator'),
+(2, 'Athlete', 'ATHLETE', 'Athlete'),
+(3, 'Referee', 'REFEREE', 'Referee'),
+(4, 'Spectator', 'SPECTATOR', 'Spectator');
 
 -- 插入角色-权限关联
 INSERT IGNORE INTO sys_role_permission (role_id, permission_id) VALUES
@@ -51,10 +51,10 @@ INSERT IGNORE INTO sys_user_role (user_id, role_id) VALUES
 (4, 4);
 
 -- 插入运动类型
-INSERT IGNORE INTO sport_type (id, name, description, category, equipment_required, created_time) VALUES
-(1, '篮球', '篮球比赛', '球类', '篮球、球衣', NOW()),
-(2, '足球', '足球比赛', '球类', '足球、球衣', NOW()),
-(3, '羽毛球', '羽毛球比赛', '球类', '羽毛球拍、羽毛球', NOW()),
-(4, '乒乓球', '乒乓球比赛', '球类', '乒乓球拍、乒乓球', NOW()),
-(5, '游泳', '游泳比赛', '水上', '泳衣、泳镜', NOW()),
-(6, '田径', '田径比赛', '田径', '运动服、运动鞋', NOW());
+INSERT IGNORE INTO sport_type (id, name, code, description, category, is_individual, is_scored, created_time) VALUES
+(1, 'Basketball', 'basketball', 'Basketball game', 'Ball Sports', TRUE, TRUE, NOW()),
+(2, 'Football', 'football', 'Football game', 'Ball Sports', TRUE, TRUE, NOW()),
+(3, 'Badminton', 'badminton', 'Badminton game', 'Ball Sports', TRUE, TRUE, NOW()),
+(4, 'Table Tennis', 'table_tennis', 'Table tennis game', 'Ball Sports', TRUE, TRUE, NOW()),
+(5, 'Swimming', 'swimming', 'Swimming competition', 'Water Sports', TRUE, TRUE, NOW()),
+(6, 'Track and Field', 'track_field', 'Track and field competition', 'Athletics', TRUE, TRUE, NOW());
