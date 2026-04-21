@@ -67,7 +67,7 @@ public class Registration {
     private String bibNumber;
 
     // 组别(如: 男子组、女子组、青年组)
-    @Column(name = "group_name", length = 20)
+    @Column(length = 20)
     private String group;
 
     // 道次/赛道
