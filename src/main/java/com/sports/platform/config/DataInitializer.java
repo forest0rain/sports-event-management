@@ -19,16 +19,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        initRole("ROLE_ADMIN", "管理员", "系统管理员", true);
-        initRole("ROLE_SPECTATOR", "观众", "普通观众", true);
-        initRole("ROLE_ATHLETE", "运动员", "运动员角色", true);
-        initRole("ROLE_REFEREE", "裁判", "裁判角色", true);
+        initRole("ROLE_ADMIN", "管理员", "系统管理员");
+        initRole("ROLE_SPECTATOR", "观众", "普通观众");
+        initRole("ROLE_ATHLETE", "运动员", "运动员角色");
+        initRole("ROLE_REFEREE", "裁判", "裁判角色");
         
         // 初始化运动项目
         initSportTypes();
     }
 
-    private void initRole(String code, String name, String description, boolean enabled) {
+    private void initRole(String code, String name, String description) {
         boolean exists = roleRepository.findByCode(code).isPresent();
         if (exists) {
             System.out.println("角色已存在，跳过初始化：" + code);
@@ -39,7 +39,6 @@ public class DataInitializer implements CommandLineRunner {
         role.setCode(code);
         role.setName(name);
         role.setDescription(description);
-        role.setEnabled(enabled);
         role.setCreatedTime(LocalDateTime.now());
 
         roleRepository.save(role);

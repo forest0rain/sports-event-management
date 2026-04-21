@@ -64,7 +64,6 @@ public class UserService {
                             .name("观众")
                             .code(Role.SPECTATOR)
                             .description("普通观众")
-                            .enabled(true)
                             .build();
                     return roleRepository.save(newRole);
                 });
