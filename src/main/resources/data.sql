@@ -29,19 +29,19 @@ INSERT IGNORE INTO sys_role_permission (role_id, permission_id) VALUES
 
 -- 插入管理员用户 (密码: admin123)
 INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(1, 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'admin@example.com', '系统管理员', TRUE, TRUE, TRUE, TRUE);
+(1, 'admin', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'admin@example.com', 'Admin', TRUE, TRUE, TRUE, TRUE);
 
 -- 插入运动员用户 (密码: athlete123)
 INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(2, 'athlete', '$2a$10$X5wFutsrWd86F2qU8HJqVeOZqLyXQhQVAF6zA1j9A1qU1qHQwZGy2', 'athlete@example.com', '测试运动员', TRUE, TRUE, TRUE, TRUE);
+(2, 'athlete', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'athlete@example.com', 'Athlete', TRUE, TRUE, TRUE, TRUE);
 
 -- 插入裁判用户 (密码: referee123)
 INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(3, 'referee', '$2a$10$Yq7.8xqPLl5kqDZ5uIqP4eVjD8vZvMqUqUqUqUqUqUqUqUqUqUqU', 'referee@example.com', '测试裁判', TRUE, TRUE, TRUE, TRUE);
+(3, 'referee', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'referee@example.com', 'Referee', TRUE, TRUE, TRUE, TRUE);
 
 -- 插入观众用户 (密码: spectator123)
 INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(4, 'spectator', '$2a$10$Zw8.rTusrdHqDZ5uIqP4eVjD8vZvMqUqUqUqUqUqUqUqUqUqUqU', 'spectator@example.com', '测试观众', TRUE, TRUE, TRUE, TRUE);
+(4, 'spectator', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'spectator@example.com', 'Spectator', TRUE, TRUE, TRUE, TRUE);
 
 -- 插入用户-角色关联
 INSERT IGNORE INTO sys_user_role (user_id, role_id) VALUES
