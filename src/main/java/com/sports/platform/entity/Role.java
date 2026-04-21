@@ -36,10 +36,6 @@ public class Role {
     @Column(length = 200)
     private String description;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean enabled = true;
-
     // 角色权限 - 多对多关系
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
