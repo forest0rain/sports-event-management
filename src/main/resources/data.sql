@@ -48,20 +48,24 @@ INSERT IGNORE INTO sys_role_permission (role_id, permission_id) VALUES
 (4, 6), (4, 7), (4, 8);
 
 -- 插入管理员用户 (密码: password123)
-INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(1, 'admin', '$2b$10$RLym1rAHCqiwJpi1O8M8C.Ad7S7ReFRywPlJlyjnUwKsJW3E.Dup2', 'admin@example.com', 'Admin', TRUE, TRUE, TRUE, TRUE);
+INSERT INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
+(1, 'admin', '$2a$10$DJlvwpMfzOqIFZCIcQkzOu8yFcIeu8eFcIIqIFZCIcQkzOu8yFcIeu', 'admin@example.com', 'Admin', TRUE, TRUE, TRUE, TRUE)
+ON DUPLICATE KEY UPDATE password = VALUES(password);
 
 -- 插入运动员用户 (密码: password123)
-INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(2, 'athlete', '$2b$10$RLym1rAHCqiwJpi1O8M8C.Ad7S7ReFRywPlJlyjnUwKsJW3E.Dup2', 'athlete@example.com', 'Athlete', TRUE, TRUE, TRUE, TRUE);
+INSERT INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
+(2, 'athlete', '$2a$10$DJlvwpMfzOqIFZCIcQkzOu8yFcIeu8eFcIIqIFZCIcQkzOu8yFcIeu', 'athlete@example.com', 'Athlete', TRUE, TRUE, TRUE, TRUE)
+ON DUPLICATE KEY UPDATE password = VALUES(password);
 
 -- 插入裁判用户 (密码: password123)
-INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(3, 'referee', '$2b$10$RLym1rAHCqiwJpi1O8M8C.Ad7S7ReFRywPlJlyjnUwKsJW3E.Dup2', 'referee@example.com', 'Referee', TRUE, TRUE, TRUE, TRUE);
+INSERT INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
+(3, 'referee', '$2a$10$DJlvwpMfzOqIFZCIcQkzOu8yFcIeu8eFcIIqIFZCIcQkzOu8yFcIeu', 'referee@example.com', 'Referee', TRUE, TRUE, TRUE, TRUE)
+ON DUPLICATE KEY UPDATE password = VALUES(password);
 
 -- 插入观众用户 (密码: password123)
-INSERT IGNORE INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
-(4, 'spectator', '$2b$10$RLym1rAHCqiwJpi1O8M8C.Ad7S7ReFRywPlJlyjnUwKsJW3E.Dup2', 'spectator@example.com', 'Spectator', TRUE, TRUE, TRUE, TRUE);
+INSERT INTO sys_user (id, username, password, email, real_name, enabled, account_non_expired, account_non_locked, credentials_non_expired) VALUES
+(4, 'spectator', '$2a$10$DJlvwpMfzOqIFZCIcQkzOu8yFcIeu8eFcIIqIFZCIcQkzOu8yFcIeu', 'spectator@example.com', 'Spectator', TRUE, TRUE, TRUE, TRUE)
+ON DUPLICATE KEY UPDATE password = VALUES(password);
 
 -- 插入用户-角色关联
 INSERT IGNORE INTO sys_user_role (user_id, role_id) VALUES

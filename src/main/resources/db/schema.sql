@@ -303,9 +303,9 @@ SELECT 1, id FROM sys_permission;
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 2, id FROM sys_permission WHERE code IN ('result:record', 'result:manage');
 
--- Insert default admin user (password: admin123, BCrypt encrypted)
+-- Insert default admin user (password: password123, BCrypt encrypted)
 INSERT INTO sys_user (username, password, email, real_name, enabled) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'admin@sports.com', 'System Admin', TRUE);
+('admin', '$2a$10$DJlvwpMfzOqIFZCIcQkzOu8yFcIeu8eFcIIqIFZCIcQkzOu8yFcIeu', 'admin@sports.com', 'System Admin', TRUE);
 
 -- Assign admin role to admin user
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
