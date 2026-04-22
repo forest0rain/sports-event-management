@@ -2,6 +2,26 @@
 -- 体育赛事管理平台 - 初始化数据
 -- ============================================
 
+-- 创建角色申请表（如果不存在）
+CREATE TABLE IF NOT EXISTS sys_role_application (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    requested_role VARCHAR(50) NOT NULL,
+    reason VARCHAR(500),
+    qualification VARCHAR(500),
+    qualification_file VARCHAR(255),
+    qualification_file_name VARCHAR(100),
+    contact_phone VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    reviewer_id BIGINT,
+    review_comment VARCHAR(500),
+    review_time DATETIME,
+    created_time DATETIME NOT NULL,
+    updated_time DATETIME,
+    CONSTRAINT fk_role_application_user FOREIGN KEY (user_id) REFERENCES sys_user(id),
+    CONSTRAINT fk_role_application_reviewer FOREIGN KEY (reviewer_id) REFERENCES sys_user(id)
+);
+
 -- 插入权限
 INSERT IGNORE INTO sys_permission (id, name, code, description, resource) VALUES
 (1, 'User Management', 'user:manage', 'User Management Permission', '/api/users/**'),
