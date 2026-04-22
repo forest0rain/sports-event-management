@@ -16,13 +16,11 @@ public class SportsPlatformApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SportsPlatformApplication.class, args);
-        System.out.println("""
-
-            ========================================
-              体育赛事管理平台启动成功!
-              访问地址: http://localhost:8080
-              默认管理员: admin / admin123
-            ========================================
-            """);
+        System.out.println("\n" +
+                "========================================\n" +
+                "  体育赛事管理平台启动成功!\n" +
+                "  访问地址: http://localhost:8080\n" +
+                "  默认管理员: admin / password123\n" +
+                "========================================\n");
     }
 }
