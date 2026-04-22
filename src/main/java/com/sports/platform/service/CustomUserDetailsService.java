@@ -3,12 +3,14 @@ package com.sports.platform.service;
 import com.sports.platform.entity.User;
 import com.sports.platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
@@ -32,9 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getAccountNonExpired() != null && user.getAccountNonExpired(),
                 user.getCredentialsNonExpired() != null && user.getCredentialsNonExpired(),
                 user.getAccountNonLocked() != null && user.getAccountNonLocked(),
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(role.getCode()))
-                        .collect(Collectors.toList())
+                user.getAuthorities()
         );
     }
 }
