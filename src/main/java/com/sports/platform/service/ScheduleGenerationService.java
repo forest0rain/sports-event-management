@@ -2,19 +2,20 @@ package com.sports.platform.service;
 
 import com.sports.platform.entity.Event;
 import com.sports.platform.entity.Schedule;
-import com.sports.platform.entity.SportType;
+import com.sports.platform.entity.Venue;
 import com.sports.platform.repository.EventRepository;
 import com.sports.platform.repository.ScheduleRepository;
 import com.sports.platform.repository.SportTypeRepository;
+import com.sports.platform.repository.VenueRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 智能赛程编排服务
@@ -28,6 +29,7 @@ public class ScheduleGenerationService {
     private final EventRepository eventRepository;
     private final SportTypeRepository sportTypeRepository;
     private final ScheduleRepository scheduleRepository;
+    private final VenueRepository venueRepository;
 
     // 模拟退火算法参数
     private static final double INITIAL_TEMPERATURE = 10000.0;  // 初始温度
@@ -74,19 +76,26 @@ public class ScheduleGenerationService {
             return GenerationResult.fail("请先添加赛程安排");
         }
 
+        // 获取所有场地用于分配
+        List<Venue> venues = venueRepository.findAll();
+        if (venues.isEmpty()) {
+            return GenerationResult.fail("请先添加场地信息");
+        }
+
         // 按运动项目分组
         Map<Long, List<Schedule>> schedulesBySport = new HashMap<>();
         for (Schedule s : existingSchedules) {
-            schedulesBySport.computeIfAbsent(s.getSportTypeId(), k -> new ArrayList<>()).add(s);
+            Long sportTypeId = s.getSportType() != null ? s.getSportType().getId() : 0L;
+            schedulesBySport.computeIfAbsent(sportTypeId, k -> new ArrayList<>()).add(s);
         }
 
         // 使用模拟退火算法优化编排
         ScheduleOptimizationResult result = simulatedAnnealingOptimization(
-            event, eventDates, schedulesBySport
+            event, eventDates, schedulesBySport, venues
         );
 
         // 保存优化后的赛程
-        saveOptimizedSchedules(result.getOptimizedSchedules());
+        saveOptimizedSchedules(result.getOptimizedSchedules(), venues);
 
         log.info("赛程生成完成，优化了 {} 个时间段", result.getOptimizedSchedules().size());
 
@@ -104,10 +113,11 @@ public class ScheduleGenerationService {
     private ScheduleOptimizationResult simulatedAnnealingOptimization(
             Event event,
             List<LocalDate> eventDates,
-            Map<Long, List<Schedule>> schedulesBySport) {
+            Map<Long, List<Schedule>> schedulesBySport,
+            List<Venue> venues) {
 
         // 初始化：贪婪策略生成初始解
-        List<OptimizedScheduleSlot> currentSolution = greedyInitialSolution(eventDates, schedulesBySport);
+        List<OptimizedScheduleSlot> currentSolution = greedyInitialSolution(eventDates, schedulesBySport, venues);
         double currentEnergy = calculateEnergy(currentSolution, eventDates);
 
         List<OptimizedScheduleSlot> bestSolution = deepCopy(currentSolution);
@@ -164,10 +174,11 @@ public class ScheduleGenerationService {
      */
     private List<OptimizedScheduleSlot> greedyInitialSolution(
             List<LocalDate> eventDates,
-            Map<Long, List<Schedule>> schedulesBySport) {
+            Map<Long, List<Schedule>> schedulesBySport,
+            List<Venue> venues) {
 
         List<OptimizedScheduleSlot> slots = new ArrayList<>();
-        Map<Long, Integer> venueUsageCount = new HashMap<>(); // 场地使用计数
+        Map<LocalDate, Map<Long, Integer>> venueUsageByDate = new HashMap<>(); // 按日期统计场地使用
 
         // 定义每天的时间段 (8:00-12:00, 14:00-18:00, 19:00-22:00)
         List<LocalTime[]> timeSlots = Arrays.asList(
@@ -176,41 +187,49 @@ public class ScheduleGenerationService {
             new LocalTime[]{LocalTime.of(19, 0), LocalTime.of(22, 0)}
         );
 
+        int venueIndex = 0;
         for (Map.Entry<Long, List<Schedule>> entry : schedulesBySport.entrySet()) {
             List<Schedule> schedules = entry.getValue();
 
             for (Schedule schedule : schedules) {
                 LocalDate bestDate = null;
                 LocalTime[] bestTimeSlot = null;
+                Long bestVenueId = null;
                 int minConflicts = Integer.MAX_VALUE;
 
                 // 遍历所有日期和时间段，找最优
                 for (LocalDate date : eventDates) {
                     for (LocalTime[] timeSlot : timeSlots) {
-                        int conflicts = calculateSlotConflicts(
-                            slots, date, timeSlot, venueUsageCount, schedule
-                        );
+                        for (Venue venue : venues) {
+                            int conflicts = calculateSlotConflicts(
+                                slots, date, timeSlot, venueUsageByDate, schedule, venue.getId()
+                            );
 
-                        if (conflicts < minConflicts) {
-                            minConflicts = conflicts;
-                            bestDate = date;
-                            bestTimeSlot = timeSlot;
+                            if (conflicts < minConflicts) {
+                                minConflicts = conflicts;
+                                bestDate = date;
+                                bestTimeSlot = timeSlot;
+                                bestVenueId = venue.getId();
+                            }
                         }
                     }
                 }
 
-                if (bestDate != null && bestTimeSlot != null) {
+                if (bestDate != null && bestTimeSlot != null && bestVenueId != null) {
                     OptimizedScheduleSlot slot = new OptimizedScheduleSlot();
                     slot.setScheduleId(schedule.getId());
-                    slot.setEventId(schedule.getEventId());
-                    slot.setSportTypeId(schedule.getSportTypeId());
+                    slot.setEventId(schedule.getEvent() != null ? schedule.getEvent().getId() : null);
+                    slot.setSportTypeId(schedule.getSportType() != null ? schedule.getSportType().getId() : null);
                     slot.setDate(bestDate);
                     slot.setStartTime(bestTimeSlot[0]);
                     slot.setEndTime(bestTimeSlot[1]);
-                    slot.setVenueId(schedule.getVenueId());
+                    slot.setVenueId(bestVenueId);
 
                     slots.add(slot);
-                    venueUsageCount.merge(bestDate, 1, Integer::sum);
+
+                    // 更新场地使用统计
+                    venueUsageByDate.computeIfAbsent(bestDate, k -> new HashMap<>())
+                        .merge(bestVenueId, 1, Integer::sum);
                 }
             }
         }
@@ -325,7 +344,6 @@ public class ScheduleGenerationService {
         double avgUsage = totalUsage / eventDates.size();
 
         // 理想情况：每天均匀分布，使用率接近100%
-        // 这里简化计算，实际应根据场地数量计算
         double idealUsage = 3.0; // 每个时间段理想使用
         double utilization = Math.min(1.0, avgUsage / idealUsage);
 
@@ -338,7 +356,6 @@ public class ScheduleGenerationService {
     private double calculateTimeCompactness(List<OptimizedScheduleSlot> solution, List<LocalDate> eventDates) {
         if (solution.isEmpty()) return 0;
 
-        // 计算赛事首尾日期的使用情况
         LocalDate firstDate = eventDates.get(0);
         LocalDate lastDate = eventDates.get(eventDates.size() - 1);
 
@@ -367,17 +384,16 @@ public class ScheduleGenerationService {
         }
         for (List<OptimizedScheduleSlot> slots : timeVenueSlots.values()) {
             if (slots.size() > 1) {
-                conflicts += slots.size() - 1; // 每多一个就是一次冲突
+                conflicts += slots.size() - 1;
             }
         }
 
-        // 2. 运动员休息时间不足
-        Map<Long, List<OptimizedScheduleSlot>> athleteSlots = new HashMap<>();
+        // 2. 运动员休息时间不足（按scheduleId分组）
+        Map<Long, List<OptimizedScheduleSlot>> scheduleSlots = new HashMap<>();
         for (OptimizedScheduleSlot slot : solution) {
-            // 假设 scheduleId 对应运动员ID，需要关联 registration 表
-            athleteSlots.computeIfAbsent(slot.getScheduleId(), k -> new ArrayList<>()).add(slot);
+            scheduleSlots.computeIfAbsent(slot.getScheduleId(), k -> new ArrayList<>()).add(slot);
         }
-        for (List<OptimizedScheduleSlot> slots : athleteSlots.values()) {
+        for (List<OptimizedScheduleSlot> slots : scheduleSlots.values()) {
             slots.sort(Comparator.comparing(OptimizedScheduleSlot::getStartTime));
             for (int i = 1; i < slots.size(); i++) {
                 OptimizedScheduleSlot prev = slots.get(i - 1);
@@ -403,41 +419,26 @@ public class ScheduleGenerationService {
             List<OptimizedScheduleSlot> existingSlots,
             LocalDate date,
             LocalTime[] timeSlot,
-            Map<Long, Integer> venueUsageCount,
-            Schedule newSchedule) {
+            Map<LocalDate, Map<Long, Integer>> venueUsageByDate,
+            Schedule newSchedule,
+            Long venueId) {
 
         int conflicts = 0;
 
         // 检查场地时间冲突
         for (OptimizedScheduleSlot slot : existingSlots) {
-            if (slot.getDate().equals(date) &&
-                slot.getVenueId() != null &&
-                slot.getVenueId().equals(newSchedule.getVenueId())) {
-
-                // 检查时间重叠
-                if (timesOverlap(slot.getStartTime(), slot.getEndTime(),
-                               timeSlot[0], timeSlot[1])) {
+            if (slot.getDate().equals(date) && slot.getVenueId() != null && slot.getVenueId().equals(venueId)) {
+                if (timesOverlap(slot.getStartTime(), slot.getEndTime(), timeSlot[0], timeSlot[1])) {
                     conflicts += 5;
                 }
             }
         }
 
         // 检查每天场次上限
-        Integer dayUsage = venueUsageCount.getOrDefault(date, 0);
-        if (dayUsage >= MAX_MATCHES_PER_DAY) {
+        Map<Long, Integer> dayUsage = venueUsageByDate.getOrDefault(date, new HashMap<>());
+        int totalDayUsage = dayUsage.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalDayUsage >= MAX_MATCHES_PER_DAY) {
             conflicts += 3;
-        }
-
-        // 检查休息时间
-        for (OptimizedScheduleSlot slot : existingSlots) {
-            if (slot.getDate().equals(date)) {
-                long hours = Math.abs(java.time.Duration.between(
-                    slot.getEndTime(), timeSlot[0]
-                ).toHours());
-                if (hours < MIN_REST_HOURS) {
-                    conflicts += 2;
-                }
-            }
         }
 
         return conflicts;
@@ -456,7 +457,6 @@ public class ScheduleGenerationService {
     private double calculateRestSatisfaction(List<OptimizedScheduleSlot> solution) {
         if (solution.isEmpty()) return 0;
 
-        // 理想休息时间2-4小时
         double totalSatisfaction = 0;
         int count = 0;
 
@@ -515,15 +515,20 @@ public class ScheduleGenerationService {
     /**
      * 保存优化后的赛程
      */
-    private void saveOptimizedSchedules(List<OptimizedScheduleSlot> optimizedSlots) {
+    private void saveOptimizedSchedules(List<OptimizedScheduleSlot> optimizedSlots, List<Venue> venues) {
         for (OptimizedScheduleSlot slot : optimizedSlots) {
             Optional<Schedule> scheduleOpt = scheduleRepository.findById(slot.getScheduleId());
             if (scheduleOpt.isPresent()) {
                 Schedule schedule = scheduleOpt.get();
-                schedule.setScheduledDate(slot.getDate());
+                schedule.setDate(slot.getDate());
                 schedule.setStartTime(slot.getStartTime());
                 schedule.setEndTime(slot.getEndTime());
-                schedule.setVenueId(slot.getVenueId());
+
+                // 分配场地
+                if (slot.getVenueId() != null) {
+                    venueRepository.findById(slot.getVenueId()).ifPresent(schedule::setVenue);
+                }
+
                 schedule.setStatus("SCHEDULED");
                 scheduleRepository.save(schedule);
             }

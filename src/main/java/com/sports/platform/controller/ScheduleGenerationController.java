@@ -6,9 +6,11 @@ import com.sports.platform.entity.SportType;
 import com.sports.platform.repository.EventRepository;
 import com.sports.platform.repository.ScheduleRepository;
 import com.sports.platform.repository.SportTypeRepository;
+import com.sports.platform.repository.VenueRepository;
 import com.sports.platform.service.ScheduleGenerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -33,6 +35,7 @@ public class ScheduleGenerationController {
     private final EventRepository eventRepository;
     private final ScheduleRepository scheduleRepository;
     private final SportTypeRepository sportTypeRepository;
+    private final VenueRepository venueRepository;
 
     /**
      * 赛程编排页面
@@ -40,8 +43,8 @@ public class ScheduleGenerationController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public String scheduleGenerationPage(Model model) {
-        // 获取所有已发布的赛事
-        List<Event> events = eventRepository.findByStatus("PUBLISHED");
+        // 获取所有已发布的赛事（分页获取全部）
+        List<Event> events = eventRepository.findByStatus("PUBLISHED", PageRequest.of(0, 100)).getContent();
         model.addAttribute("events", events);
         return "admin/schedule-generation";
     }
@@ -57,16 +60,16 @@ public class ScheduleGenerationController {
         List<ScheduleDTO> dtos = schedules.stream().map(s -> {
             ScheduleDTO dto = new ScheduleDTO();
             dto.setId(s.getId());
-            dto.setEventId(s.getEventId());
-            dto.setSportTypeId(s.getSportTypeId());
-            dto.setSportTypeName(getSportTypeName(s.getSportTypeId()));
-            dto.setScheduledDate(s.getScheduledDate());
+            dto.setEventId(s.getEvent() != null ? s.getEvent().getId() : null);
+            dto.setSportTypeId(s.getSportType() != null ? s.getSportType().getId() : null);
+            dto.setSportTypeName(s.getSportType() != null ? s.getSportType().getName() : "未指定");
+            dto.setScheduledDate(s.getDate());
             dto.setStartTime(s.getStartTime());
             dto.setEndTime(s.getEndTime());
-            dto.setVenueId(s.getVenueId());
-            dto.setVenueName(getVenueName(s.getVenueId()));
+            dto.setVenueId(s.getVenue() != null ? s.getVenue().getId() : null);
+            dto.setVenueName(s.getVenue() != null ? s.getVenue().getName() : "未分配");
             dto.setStatus(s.getStatus());
-            dto.setRound(s.getRound());
+            dto.setRound(s.getRoundType());
             dto.setGroupName(s.getGroupName());
             return dto;
         }).collect(Collectors.toList());
@@ -117,33 +120,18 @@ public class ScheduleGenerationController {
 
         // 按运动项目统计
         Map<Long, Long> bySport = schedules.stream()
-            .collect(Collectors.groupingBy(Schedule::getSportTypeId, Collectors.counting()));
+            .collect(Collectors.groupingBy(s -> s.getSportType() != null ? s.getSportType().getId() : 0L, Collectors.counting()));
         stats.put("bySportType", bySport);
 
         // 按日期统计
         long scheduledDays = schedules.stream()
-            .map(Schedule::getScheduledDate)
+            .map(Schedule::getDate)
             .filter(d -> d != null)
             .distinct()
             .count();
         stats.put("scheduledDays", scheduledDays);
 
         return ResponseEntity.ok(stats);
-    }
-
-    // ============ 辅助方法 ============
-
-    private String getSportTypeName(Long sportTypeId) {
-        if (sportTypeId == null) return "未指定";
-        return sportTypeRepository.findById(sportTypeId)
-            .map(SportType::getName)
-            .orElse("未知项目");
-    }
-
-    private String getVenueName(Long venueId) {
-        if (venueId == null) return "未分配";
-        // TODO: 后续接入场地表
-        return "场地" + venueId;
     }
 
     // ============ DTO ============
