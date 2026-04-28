@@ -55,7 +55,8 @@ public class ScheduleGenerationController {
     @GetMapping("/schedules/{eventId}")
     @ResponseBody
     public ResponseEntity<List<ScheduleDTO>> getEventSchedules(@PathVariable Long eventId) {
-        List<Schedule> schedules = scheduleRepository.findByEventId(eventId);
+        // 使用预加载关联实体的查询方法
+        List<Schedule> schedules = scheduleRepository.findByEventIdWithDetails(eventId);
 
         List<ScheduleDTO> dtos = schedules.stream().map(s -> {
             ScheduleDTO dto = new ScheduleDTO();
