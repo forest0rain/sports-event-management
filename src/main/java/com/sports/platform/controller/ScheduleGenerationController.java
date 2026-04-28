@@ -63,13 +63,15 @@ public class ScheduleGenerationController {
             dto.setEventId(s.getEvent() != null ? s.getEvent().getId() : null);
             dto.setSportTypeId(s.getSportType() != null ? s.getSportType().getId() : null);
             dto.setSportTypeName(s.getSportType() != null ? s.getSportType().getName() : "未指定");
-            dto.setScheduledDate(s.getDate());
+            // 使用date字段（与前端一致）
+            dto.setDate(s.getDate());
             dto.setStartTime(s.getStartTime());
             dto.setEndTime(s.getEndTime());
             dto.setVenueId(s.getVenue() != null ? s.getVenue().getId() : null);
             dto.setVenueName(s.getVenue() != null ? s.getVenue().getName() : "未分配");
             dto.setStatus(s.getStatus());
-            dto.setRound(s.getRoundType());
+            // 使用roundType字段（与前端一致）
+            dto.setRoundType(s.getRoundType());
             dto.setGroupName(s.getGroupName());
             return dto;
         }).collect(Collectors.toList());
@@ -142,13 +144,13 @@ public class ScheduleGenerationController {
         private Long eventId;
         private Long sportTypeId;
         private String sportTypeName;
-        private java.time.LocalDate scheduledDate;
+        private java.time.LocalDate date;
         private java.time.LocalTime startTime;
         private java.time.LocalTime endTime;
         private Long venueId;
         private String venueName;
         private String status;
-        private String round;
+        private String roundType;
         private String groupName;
     }
 }

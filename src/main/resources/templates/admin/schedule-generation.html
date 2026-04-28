@@ -280,17 +280,27 @@
         $(document).ready(function() {
             let currentEventId = null;
 
-            // 选择赛事
+            // 选择赛事 - 自动加载
             $('#eventSelect').change(function() {
                 currentEventId = $(this).val();
                 if (currentEventId) {
                     $('#btnLoadSchedules').prop('disabled', false);
+                    // 移除错误弹窗显示
+                    Swal.close();
                     loadSchedules(currentEventId);
                 } else {
                     $('#btnLoadSchedules').prop('disabled', true);
                     $('#scheduleSection').hide();
                 }
             });
+
+            // 如果有赛事，自动加载第一个
+            var firstEventId = $('#eventSelect').val();
+            if (firstEventId) {
+                currentEventId = firstEventId;
+                $('#btnLoadSchedules').prop('disabled', false);
+                loadSchedules(firstEventId);
+            }
 
             // 加载赛程按钮
             $('#btnLoadSchedules').click(function() {
@@ -317,15 +327,20 @@
 
             // 加载赛程列表
             function loadSchedules(eventId) {
-                $.get('/schedule-generation/schedules/' + eventId, function(data) {
-                    renderScheduleTable(data);
-                    $('#scheduleSection').show();
-                }).fail(function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '加载失败',
-                        text: '加载赛程数据失败'
-                    });
+                $('#scheduleSection').show();
+                
+                $.ajax({
+                    url: '/schedule-generation/schedules/' + eventId,
+                    type: 'GET',
+                    success: function(data) {
+                        console.log('加载到赛程数据:', data);
+                        renderScheduleTable(data);
+                    },
+                    error: function(xhr) {
+                        console.error('加载赛程失败:', xhr);
+                        var tbody = $('#scheduleTableBody');
+                        tbody.html('<tr><td colspan="8" class="text-center text-danger">加载失败，请检查控制台</td></tr>');
+                    }
                 });
 
                 // 加载统计信息
@@ -334,38 +349,64 @@
 
             // 加载统计
             function loadStatistics(eventId) {
-                $.get('/schedule-generation/statistics/' + eventId, function(data) {
-                    $('#totalSchedules').text(data.totalSchedules || 0);
-                    $('#scheduledCount').text(data.scheduledCount || 0);
-                    $('#pendingCount').text(data.pendingCount || 0);
-                    $('#scheduledDays').text(data.scheduledDays || 0);
+                $.ajax({
+                    url: '/schedule-generation/statistics/' + eventId,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#totalSchedules').text(data.totalSchedules || 0);
+                        $('#scheduledCount').text(data.scheduledCount || 0);
+                        $('#pendingCount').text(data.pendingCount || 0);
+                        $('#scheduledDays').text(data.scheduledDays || 0);
+                    },
+                    error: function(xhr) {
+                        console.error('加载统计失败:', xhr);
+                    }
                 });
             }
 
             // 渲染表格
             function renderScheduleTable(schedules) {
-                const tbody = $('#scheduleTableBody');
+                var tbody = $('#scheduleTableBody');
                 tbody.empty();
 
                 if (!schedules || schedules.length === 0) {
                     tbody.html('<tr><td colspan="8" class="text-center text-muted">暂无赛程数据</td></tr>');
+                    $('#scheduleCount').text('0 条记录');
                     return;
                 }
 
                 schedules.forEach(function(s, index) {
                     var statusClass = getStatusClass(s.status);
                     var statusText = getStatusText(s.status);
-                    var date = s.date || '未排';
-                    var startTime = s.startTime ? s.startTime.substring(0, 5) : '--:--';
-                    var endTime = s.endTime ? s.endTime.substring(0, 5) : '--:--';
+                    
+                    // 处理日期格式
+                    var dateStr = '未排';
+                    if (s.date) {
+                        if (typeof s.date === 'string') {
+                            dateStr = s.date.substring(0, 10);
+                        } else {
+                            dateStr = s.date;
+                        }
+                    }
+                    
+                    // 处理时间格式
+                    var startTime = '--:--';
+                    var endTime = '--:--';
+                    if (s.startTime) {
+                        startTime = typeof s.startTime === 'string' ? s.startTime.substring(0, 5) : s.startTime;
+                    }
+                    if (s.endTime) {
+                        endTime = typeof s.endTime === 'string' ? s.endTime.substring(0, 5) : s.endTime;
+                    }
+
                     var venueName = s.venueName || '未分配';
-                    var roundType = s.roundType || '-';
+                    var roundType = s.roundType || s.round || '-';
                     var sportTypeName = s.sportTypeName || '未知';
 
                     var row = '<tr>' +
                         '<td>' + (index + 1) + '</td>' +
                         '<td><span class="badge bg-primary">' + sportTypeName + '</span></td>' +
-                        '<td>' + date + '</td>' +
+                        '<td>' + dateStr + '</td>' +
                         '<td>' + startTime + '</td>' +
                         '<td>' + endTime + '</td>' +
                         '<td>' + venueName + '</td>' +
