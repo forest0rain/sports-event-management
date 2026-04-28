@@ -149,19 +149,24 @@ public class ScheduleGenerationService {
             int minConflicts = Integer.MAX_VALUE;
 
             // 遍历所有日期、时间段、场地，找最优位置
-            outerLoop:
             for (LocalDate date : eventDates) {
                 for (LocalTime[] timeSlot : TIME_SLOTS) {
                     for (Venue venue : venues) {
                         List<LocalTime[]> usedSlots = venueUsage.get(date).get(venue.getId());
                         
                         // 检查该场地此时段是否已被占用
+                        boolean isVenueOccupied = false;
                         if (usedSlots != null) {
                             for (LocalTime[] used : usedSlots) {
                                 if (timesOverlap(timeSlot[0], timeSlot[1], used[0], used[1])) {
-                                    continue;
+                                    isVenueOccupied = true;
+                                    break;  // 场地被占用，跳过这个场地
                                 }
                             }
+                        }
+                        
+                        if (isVenueOccupied) {
+                            continue;  // 跳过当前场地，尝试下一个场地
                         }
 
                         // 计算当前选择的冲突数
@@ -181,9 +186,27 @@ public class ScheduleGenerationService {
                             bestSlot.setEndTime(timeSlot[1]);
                             bestSlot.setVenueId(venue.getId());
 
-                            // 如果没有冲突，直接选择
+                            // 如果没有冲突，选择这个位置并记录，然后处理下一个赛程
                             if (currentConflicts == 0) {
-                                break outerLoop;
+                                // 先更新场地使用记录（因为跳出后这个场地就不能再用了）
+                                venueUsage.get(date)
+                                    .computeIfAbsent(venue.getId(), k -> new ArrayList<>())
+                                    .add(new LocalTime[]{timeSlot[0], timeSlot[1]});
+                                // 更新运动员参赛记录
+                                athleteSchedules.computeIfAbsent(sportTypeId, k -> new ArrayList<>())
+                                    .add(timeSlot[1]);
+                                    
+                                // 创建结果并添加到列表
+                                bestSlot = new OptimizedScheduleSlot();
+                                bestSlot.setScheduleId(schedule.getId());
+                                bestSlot.setEventId(schedule.getEvent() != null ? schedule.getEvent().getId() : null);
+                                bestSlot.setSportTypeId(sportTypeId);
+                                bestSlot.setDate(date);
+                                bestSlot.setStartTime(timeSlot[0]);
+                                bestSlot.setEndTime(timeSlot[1]);
+                                bestSlot.setVenueId(venue.getId());
+                                optimizedSchedules.add(bestSlot);
+                                break;  // 跳出场地循环，处理下一个赛程
                             }
                         }
                     }
@@ -191,18 +214,12 @@ public class ScheduleGenerationService {
             }
 
             // 如果找到合适的槽位，添加到结果
-            if (bestSlot != null) {
+            if (bestSlot != null && !optimizedSchedules.stream().anyMatch(s -> s.getScheduleId().equals(bestSlot.getScheduleId()))) {
                 optimizedSchedules.add(bestSlot);
                 conflicts += minConflicts;
 
-                // 更新场地使用记录
-                venueUsage.get(bestSlot.getDate())
-                    .computeIfAbsent(bestSlot.getVenueId(), k -> new ArrayList<>())
-                    .add(new LocalTime[]{bestSlot.getStartTime(), bestSlot.getEndTime()});
-
-                // 更新运动员参赛记录
-                athleteSchedules.computeIfAbsent(sportTypeId, k -> new ArrayList<>())
-                    .add(bestSlot.getEndTime());
+                // 无论是否在早期退出路径中，都需要更新场地和运动员记录
+                // （早期退出路径已在上面更新）
             }
         }
 
