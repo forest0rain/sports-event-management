@@ -136,6 +136,43 @@ public class ScheduleGenerationController {
         return ResponseEntity.ok(stats);
     }
 
+    /**
+     * 重置赛事赛程状态为待编排
+     */
+    @PostMapping("/reset/{eventId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> resetSchedules(@PathVariable Long eventId) {
+        log.info("重置赛程状态, eventId: {}", eventId);
+
+        try {
+            List<Schedule> schedules = scheduleRepository.findByEventId(eventId);
+            int count = 0;
+            for (Schedule schedule : schedules) {
+                if ("SCHEDULED".equals(schedule.getStatus())) {
+                    schedule.setStatus("PENDING");
+                    schedule.setDate(null);
+                    schedule.setStartTime(null);
+                    schedule.setEndTime(null);
+                    schedule.setVenue(null);
+                    scheduleRepository.save(schedule);
+                    count++;
+                }
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "已重置 " + count + " 条赛程为待编排状态");
+            response.put("resetCount", count);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("重置赛程失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "重置失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
     // ============ DTO ============
 
     @lombok.Data
