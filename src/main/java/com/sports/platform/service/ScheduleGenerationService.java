@@ -156,12 +156,17 @@ public class ScheduleGenerationService {
                         List<LocalTime[]> usedSlots = venueUsage.get(date).get(venue.getId());
                         
                         // 检查该场地此时段是否已被占用
+                        boolean isVenueOccupied = false;
                         if (usedSlots != null) {
                             for (LocalTime[] used : usedSlots) {
                                 if (timesOverlap(timeSlot[0], timeSlot[1], used[0], used[1])) {
-                                    continue;  // 场地被占用，跳过这个场地
+                                    isVenueOccupied = true;
+                                    break;
                                 }
                             }
+                        }
+                        if (isVenueOccupied) {
+                            continue;  // 场地被占用，跳过这个场地
                         }
 
                         // 计算当前选择的冲突数
