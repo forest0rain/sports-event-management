@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+
+<head>
+    <title>用户详情 - 体育赛事管理平台</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- 页面标题 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-person"></i> 用户详情</h2>
+            <div>
+                <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> 编辑
+                </a>
+                <a th:href="@{/admin/users}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 基本信息 -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> 基本信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="30%">用户名</th>
+                                <td th:text="${user.username}"></td>
+                            </tr>
+                            <tr>
+                                <th>真实姓名</th>
+                                <td th:text="${user.realName ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>邮箱</th>
+                                <td th:text="${user.email ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>手机号</th>
+                                <td th:text="${user.phone ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>性别</th>
+                                <td th:text="${user.gender ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>身份证号</th>
+                                <td th:text="${user.idCard ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>组织/学校</th>
+                                <td th:text="${user.organization ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>部门</th>
+                                <td th:text="${user.department ?: '-'}"></td>
+                            </tr>
+                            <tr>
+                                <th>学号</th>
+                                <td th:text="${user.studentId ?: '-'}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 账户状态 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-lock"></i> 账户状态</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="30%">状态</th>
+                                <td>
+                                    <span th:if="${user.enabled}" class="badge bg-success">启用</span>
+                                    <span th:unless="${user.enabled}" class="badge bg-danger">禁用</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>账户未过期</th>
+                                <td>
+                                    <span th:if="${user.accountNonExpired}" class="badge bg-success">是</span>
+                                    <span th:unless="${user.accountNonExpired}" class="badge bg-danger">否</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>账户未锁定</th>
+                                <td>
+                                    <span th:if="${user.accountNonLocked}" class="badge bg-success">是</span>
+                                    <span th:unless="${user.accountNonLocked}" class="badge bg-danger">否</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>凭据未过期</th>
+                                <td>
+                                    <span th:if="${user.credentialsNonExpired}" class="badge bg-success">是</span>
+                                    <span th:unless="${user.credentialsNonExpired}" class="badge bg-danger">否</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>创建时间</th>
+                                <td th:text="${#temporals.format(user.createdTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                            </tr>
+                            <tr>
+                                <th>更新时间</th>
+                                <td th:text="${user.updatedTime != null ? #temporals.format(user.updatedTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 角色信息 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-tags"></i> 角色</h5>
+                    </div>
+                    <div class="card-body">
+                        <span th:each="role : ${user.roles}" 
+                              class="badge bg-primary me-2 mb-2"
+                              th:text="${role.name}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="col-md-4">
+                <!-- 头像 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person-circle"></i> 头像</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img th:if="${user.avatar}" th:src="${user.avatar}" 
+                             class="rounded-circle mb-3" width="150" height="150">
+                        <img th:unless="${user.avatar}" 
+                             src="https://via.placeholder.com/150" 
+                             class="rounded-circle mb-3" width="150" height="150">
+                    </div>
+                </div>
+
+                <!-- 快速操作 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-lightning"></i> 快速操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 重置密码 -->
+                        <button class="btn btn-outline-primary w-100 mb-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#resetPasswordModal">
+                            <i class="bi bi-key"></i> 重置密码
+                        </button>
+
+                        <!-- 启用/禁用 -->
+                        <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" method="post">
+                            <button type="submit" class="btn w-100 mb-2"
+                                    th:classappend="${user.enabled} ? 'btn-outline-warning' : 'btn-outline-success'">
+                                <i th:class="${user.enabled} ? 'bi bi-slash-circle' : 'bi bi-check-circle'"></i>
+                                <span th:text="${user.enabled} ? '禁用账户' : '启用账户'"></span>
+                            </button>
+                        </form>
+
+                        <!-- 删除 -->
+                        <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post"
+                              onsubmit="return confirm('确定要删除该用户吗？此操作不可恢复！')">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-trash"></i> 删除用户
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置密码模态框 -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">重置密码</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/users/{id}/reset-password(id=${user.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">新密码</label>
+                            <input type="password" name="newPassword" class="form-control" 
+                                   required minlength="6" placeholder="请输入新密码（至少6位）">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">确认重置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

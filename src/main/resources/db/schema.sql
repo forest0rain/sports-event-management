@@ -126,6 +126,8 @@ CREATE TABLE event (
     rules VARCHAR(500) COMMENT 'Rules',
     awards VARCHAR(500) COMMENT 'Awards',
     is_public BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Is Public',
+    registration_scope VARCHAR(50) DEFAULT 'ALL' COMMENT 'Registration Scope: ALL, ATHLETE, STUDENT, STAFF',
+    require_approval BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Require Approval',
     created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_time DATETIME ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_status (status),
@@ -163,9 +165,19 @@ DROP TABLE IF EXISTS athlete;
 CREATE TABLE athlete (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT COMMENT 'User ID',
+    name VARCHAR(100) COMMENT 'Name',
     gender VARCHAR(10) COMMENT 'Gender',
     birth_date DATE COMMENT 'Birth Date',
+    id_card VARCHAR(20) COMMENT 'ID Card',
+    nationality VARCHAR(50) COMMENT 'Nationality',
+    province VARCHAR(100) COMMENT 'Province',
+    city VARCHAR(100) COMMENT 'City',
     organization VARCHAR(100) COMMENT 'Organization',
+    coach VARCHAR(50) COMMENT 'Coach',
+    phone VARCHAR(20) COMMENT 'Phone',
+    email VARCHAR(100) COMMENT 'Email',
+    emergency_contact VARCHAR(50) COMMENT 'Emergency Contact',
+    emergency_phone VARCHAR(20) COMMENT 'Emergency Phone',
     avatar VARCHAR(200) COMMENT 'Avatar',
     bio VARCHAR(500) COMMENT 'Bio',
     specialties TEXT COMMENT 'Specialties',
@@ -305,7 +317,7 @@ SELECT 2, id FROM sys_permission WHERE code IN ('result:record', 'result:manage'
 
 -- Insert default admin user (password: password123, BCrypt encrypted)
 INSERT INTO sys_user (username, password, email, real_name, enabled) VALUES
-('admin', '$2a$10$DJlvwpMfzOqIFZCIcQkzOu8yFcIeu8eFcIIqIFZCIcQkzOu8yFcIeu', 'admin@sports.com', 'System Admin', TRUE);
+('admin', '$2a$10$tH9H90JJQJvNDI91YWPdXOymoW6i0dSiap4oLw4jqYd18XjviRGjq', 'admin@sports.com', 'System Admin', TRUE);
 
 -- Assign admin role to admin user
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);

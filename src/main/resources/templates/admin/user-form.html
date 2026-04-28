@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+
+<head>
+    <title th:text="${user.id != null ? '编辑用户' : '添加用户'}">用户表单</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- 页面标题 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-person-plus"></i>
+                <span th:text="${user.id != null ? '编辑用户' : '添加用户'}"></span>
+            </h2>
+            <a th:href="@{/admin/users}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回
+            </a>
+        </div>
+
+        <form th:action="${user.id != null ? '/admin/users/' + user.id + '/edit' : '/admin/users/create'}" 
+              th:object="${user}" method="post">
+            <div class="row">
+                <!-- 基本信息 -->
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> 基本信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">用户名 <span class="text-danger">*</span></label>
+                                    <input type="text" th:field="*{username}" class="form-control" 
+                                           required th:readonly="${user.id != null}"
+                                           placeholder="请输入用户名">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">真实姓名</label>
+                                    <input type="text" th:field="*{realName}" class="form-control" 
+                                           placeholder="请输入真实姓名">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">邮箱</label>
+                                    <input type="email" th:field="*{email}" class="form-control" 
+                                           placeholder="请输入邮箱">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">手机号</label>
+                                    <input type="text" th:field="*{phone}" class="form-control" 
+                                           placeholder="请输入手机号">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">性别</label>
+                                    <select th:field="*{gender}" class="form-select">
+                                        <option value="">请选择</option>
+                                        <option value="M">男</option>
+                                        <option value="F">女</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">身份证号</label>
+                                    <input type="text" th:field="*{idCard}" class="form-control" 
+                                           placeholder="请输入身份证号">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">组织/学校</label>
+                                    <input type="text" th:field="*{organization}" class="form-control" 
+                                           placeholder="请输入组织或学校">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">部门</label>
+                                    <input type="text" th:field="*{department}" class="form-control" 
+                                           placeholder="请输入部门">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">学号</label>
+                                    <input type="text" th:field="*{studentId}" class="form-control" 
+                                           placeholder="请输入学号">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 角色分配 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-tags"></i> 角色分配</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12" th:if="${user.id == null}">
+                                    <label class="form-label">选择角色 <span class="text-danger">*</span></label>
+                                    <div class="border rounded p-3">
+                                        <div class="form-check form-check-inline" th:each="role : ${roles}">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="roleIds" th:value="${role.id}"
+                                                   th:id="'role-' + ${role.id}">
+                                            <label class="form-check-label" th:for="'role-' + ${role.id}"
+                                                   th:text="${role.name}"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12" th:if="${user.id != null}">
+                                    <label class="form-label">修改角色</label>
+                                    <div class="border rounded p-3">
+                                        <div class="form-check form-check-inline" th:each="role : ${roles}">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="roleIds" th:value="${role.id}"
+                                                   th:id="'role-' + ${role.id}"
+                                                   th:checked="${#sets.contains(user.roles, role)}">
+                                            <label class="form-check-label" th:for="'role-' + ${role.id}"
+                                                   th:text="${role.name}"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 提交按钮 -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a th:href="@{/admin/users}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> 保存
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 侧边栏 -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-shield-lock"></i> 账户设置</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3" th:if="${user.id == null}">
+                                <label class="form-label">密码 <span class="text-danger">*</span></label>
+                                <input type="password" th:field="*{password}" class="form-control" 
+                                       required minlength="6" placeholder="请输入密码（至少6位）">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           th:field="*{enabled}" checked>
+                                    <label class="form-check-label">
+                                        启用账户
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-question-circle"></i> 帮助</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small">
+                                <strong>角色说明：</strong>
+                            </p>
+                            <ul class="text-muted small">
+                                <li><strong>管理员</strong>：拥有系统最高权限</li>
+                                <li><strong>裁判</strong>：可管理赛事、编排赛程、录入成绩</li>
+                                <li><strong>运动员</strong>：可报名参赛、查看成绩</li>
+                                <li><strong>观众</strong>：可查看公开赛事和成绩</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
