@@ -38,9 +38,9 @@ public class Schedule {
     @JoinColumn(name = "sport_type_id", nullable = false)
     private SportType sportType;
 
-    // 关联场地
+    // 关联场地 (允许为null，支持重置)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venue_id", nullable = false)
+    @JoinColumn(name = "venue_id")
     private Venue venue;
 
     // 赛程名称
@@ -55,12 +55,12 @@ public class Schedule {
     @Column(nullable = false)
     private Integer groupNumber;
 
-    // 比赛日期
-    @Column(nullable = false)
+    // 比赛日期 (允许为null，支持重置)
+    @Column
     private LocalDate date;
 
-    // 开始时间
-    @Column(nullable = false)
+    // 开始时间 (允许为null，支持重置)
+    @Column
     private LocalTime startTime;
 
     // 结束时间
