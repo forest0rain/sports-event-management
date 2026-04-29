@@ -5,6 +5,10 @@
 </head>
 <body>
 <div layout:fragment="content">
+    <!-- 图表数据嵌入（与统计页面完全相同的方式） -->
+    <script id="event-status-json" type="application/json" th:utext="${eventStatusJson}">[]</script>
+    <script id="athlete-age-json" type="application/json" th:utext="${athleteAgeJson}">[]</script>
+
     <!-- 统计卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
@@ -77,12 +81,7 @@
                     <h6 class="mb-0"><i class="bi bi-pie-chart me-2"></i>赛事状态分布</h6>
                 </div>
                 <div class="card-body">
-                    <div style="height:250px;position:relative;">
-                        <canvas id="eventStatusChart"></canvas>
-                        <div id="eventStatusEmpty" class="text-center text-muted d-flex align-items-center justify-content-center" style="height:250px;position:absolute;top:0;left:0;right:0;">
-                            <span>加载中...</span>
-                        </div>
-                    </div>
+                    <canvas id="eventStatusChart" height="250"></canvas>
                 </div>
             </div>
         </div>
@@ -92,12 +91,7 @@
                     <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>运动员年龄段分布</h6>
                 </div>
                 <div class="card-body">
-                    <div style="height:250px;position:relative;">
-                        <canvas id="athleteAgeChart"></canvas>
-                        <div id="athleteAgeEmpty" class="text-center text-muted d-flex align-items-center justify-content-center" style="height:250px;position:absolute;top:0;left:0;right:0;">
-                            <span>加载中...</span>
-                        </div>
-                    </div>
+                    <canvas id="athleteAgeChart" height="250"></canvas>
                 </div>
             </div>
         </div>
@@ -154,69 +148,58 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 通过REST API获取图表数据，完全绕开Thymeleaf数据传递问题
-    fetch('/dashboard/chart-data')
-        .then(function(response) {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
-        })
-        .then(function(data) {
-            console.log('仪表盘图表数据:', data);
-            renderEventStatusChart(data.eventStatus || []);
-            renderAthleteAgeChart(data.athleteAgeGroup || []);
-        })
-        .catch(function(err) {
-            console.error('获取仪表盘图表数据失败:', err);
-            document.getElementById('eventStatusEmpty').querySelector('span').textContent = '暂无数据';
-            document.getElementById('athleteAgeEmpty').querySelector('span').textContent = '暂无数据';
-        });
+    // 与统计页面完全相同的数据读取方式
+    function getJson(id) {
+        var el = document.getElementById(id);
+        if (!el) { console.warn('Element not found:', id); return []; }
+        var text = el.textContent.trim();
+        if (!text || text === '[]') return [];
+        try { return JSON.parse(text); }
+        catch(e) { console.error('Parse error for', id, e, text.substring(0, 100)); return []; }
+    }
 
-    function renderEventStatusChart(eventStatusData) {
-        if (!eventStatusData || eventStatusData.length === 0) {
-            document.getElementById('eventStatusEmpty').querySelector('span').textContent = '暂无数据';
-            return;
-        }
-        document.getElementById('eventStatusEmpty').style.display = 'none';
+    var eventStatusData = getJson('event-status-json');
+    var athleteAgeData = getJson('athlete-age-json');
 
-        var nameMap = {
-            'DRAFT': '草稿', 'REGISTRATION': '报名中', 'ONGOING': '进行中',
-            'FINISHED': '已结束', 'CANCELLED': '已取消'
-        };
-        var labels = eventStatusData.map(function(item) { return nameMap[item[0]] || item[0]; });
-        var values = eventStatusData.map(function(item) { return item[1]; });
-        var colors = ['#6c757d', '#0dcaf0', '#198754', '#0d6efd', '#dc3545'];
+    console.log('Dashboard chart data:', {
+        eventStatus: eventStatusData.length,
+        athleteAge: athleteAgeData.length
+    });
 
+    var statusMap = { 'DRAFT':'草稿','REGISTRATION':'报名中','ONGOING':'进行中','FINISHED':'已结束','CANCELLED':'已取消' };
+
+    // 赛事状态分布
+    if (eventStatusData.length > 0) {
         new Chart(document.getElementById('eventStatusChart'), {
             type: 'doughnut',
             data: {
-                labels: labels,
-                datasets: [{ data: values, backgroundColor: colors, borderWidth: 2 }]
+                labels: eventStatusData.map(function(i){return statusMap[i[0]]||i[0];}),
+                datasets: [{
+                    data: eventStatusData.map(function(i){return i[1];}),
+                    backgroundColor: ['#6c757d','#0dcaf0','#198754','#0d6efd','#dc3545'],
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverOffset: 6
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } }
+                cutout: '55%',
+                plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } } }
             }
         });
     }
 
-    function renderAthleteAgeChart(athleteAgeData) {
-        if (!athleteAgeData || athleteAgeData.length === 0) {
-            document.getElementById('athleteAgeEmpty').querySelector('span').textContent = '暂无数据';
-            return;
-        }
-        document.getElementById('athleteAgeEmpty').style.display = 'none';
-
-        var ageLabels = athleteAgeData.map(function(item) { return item[0]; });
-        var ageValues = athleteAgeData.map(function(item) { return item[1]; });
-
+    // 运动员年龄段分布
+    if (athleteAgeData.length > 0) {
         new Chart(document.getElementById('athleteAgeChart'), {
             type: 'bar',
             data: {
-                labels: ageLabels,
+                labels: athleteAgeData.map(function(i){return i[0];}),
                 datasets: [{
                     label: '运动员数量',
-                    data: ageValues,
+                    data: athleteAgeData.map(function(i){return i[1];}),
                     backgroundColor: '#0d6efd',
                     borderRadius: 4
                 }]

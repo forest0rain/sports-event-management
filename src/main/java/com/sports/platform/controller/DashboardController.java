@@ -6,14 +6,13 @@ import com.sports.platform.entity.RoleApplication;
 import com.sports.platform.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,33 +73,35 @@ public class DashboardController {
         model.addAttribute("ongoingEvents", ongoingEvents);
         model.addAttribute("registrationEvents", registrationEvents);
         
+        // ========== 图表数据（与统计页面相同的方式：JSON字符串嵌入模板） ==========
+        try {
+            model.addAttribute("eventStatusJson", objectMapper.writeValueAsString(
+                toListOfLists(eventRepository.countByStatus())));
+            model.addAttribute("athleteAgeJson", objectMapper.writeValueAsString(
+                toListOfLists(athleteRepository.countByAgeGroup())));
+        } catch (Exception e) {
+            model.addAttribute("eventStatusJson", "[]");
+            model.addAttribute("athleteAgeJson", "[]");
+        }
+        
         return "dashboard/index";
     }
 
     /**
-     * 仪表盘图表数据API - 通过REST接口返回JSON，前端用fetch获取
-     * 完全绕开Thymeleaf Layout Dialect数据传递问题
+     * 将List<Object[]>转为List<List<Object>>，确保正确序列化为JSON数组
      */
-    @GetMapping(value = "/chart-data", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> getChartData() {
-        Map<String, Object> data = new HashMap<>();
-        try {
-            // 赛事状态分布
-            List<List<Object>> eventStatus = eventRepository.countByStatus().stream()
-                    .map(arr -> List.of(arr[0], arr[1]))
-                    .collect(Collectors.toList());
-            data.put("eventStatus", eventStatus);
-
-            // 运动员年龄段分布
-            List<List<Object>> athleteAgeGroup = athleteRepository.countByAgeGroup().stream()
-                    .map(arr -> List.of(arr[0], arr[1]))
-                    .collect(Collectors.toList());
-            data.put("athleteAgeGroup", athleteAgeGroup);
-        } catch (Exception e) {
-            data.put("eventStatus", List.of());
-            data.put("athleteAgeGroup", List.of());
-        }
-        return ResponseEntity.ok(data);
+    private List<List<Object>> toListOfLists(List<Object[]> list) {
+        if (list == null) return Collections.emptyList();
+        return list.stream()
+            .map(arr -> {
+                List<Object> item = new ArrayList<>();
+                if (arr != null) {
+                    for (Object o : arr) {
+                        item.add(o);
+                    }
+                }
+                return item;
+            })
+            .collect(Collectors.toList());
     }
 }
