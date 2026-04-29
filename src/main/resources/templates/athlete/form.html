@@ -1,114 +1,143 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}"
       lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>运动员表单 - 体育赛事管理平台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" th:href="@{/dashboard}">
-                <i class="bi bi-trophy me-2"></i>体育赛事管理平台
-            </a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link text-white" th:href="@{/dashboard}">
-                    <i class="bi bi-house-door me-1"></i>主页
-                </a>
-            </div>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text text-white me-3">
-                    欢迎，<span sec:authentication="name">用户</span>
-                </span>
-                <a class="nav-link text-white" th:href="@{/logout}">
-                    <i class="bi bi-box-arrow-right me-1"></i>退出
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 th:text="${athlete.id != null} ? '编辑运动员' : '添加运动员'">添加运动员</h2>
-            <a th:href="@{/athletes}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>返回列表
-            </a>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                <form th:action="${athlete.id != null} ? @{/athletes/{id}/edit(id=${athlete.id})} : @{/athletes/create}" 
-                      th:object="${athlete}" method="post">
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">姓名 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" th:field="*{name}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">性别 <span class="text-danger">*</span></label>
-                            <select class="form-select" th:field="*{gender}" required>
-                                <option value="">请选择</option>
-                                <option value="M">男</option>
-                                <option value="F">女</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">出生日期 <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" th:field="*{birthDate}" required>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">身份证号</label>
-                            <input type="text" class="form-control" th:field="*{idCard}" maxlength="18">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">联系电话</label>
-                            <input type="text" class="form-control" th:field="*{phone}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">年龄组</label>
-                            <select class="form-select" th:field="*{ageGroup}">
-                                <option value="U18">U18</option>
-                                <option value="U20">U20</option>
-                                <option value="U23">U23</option>
-                                <option value="OPEN">公开组</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">所属单位</label>
-                            <input type="text" class="form-control" th:field="*{organization}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">状态</label>
-                            <div class="form-check mt-2">
-                                <input type="checkbox" class="form-check-input" th:field="*{enabled}">
-                                <label class="form-check-label">启用</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-1"></i>保存
-                        </button>
-                        <a th:href="@{/athletes}" class="btn btn-outline-secondary ms-2">取消</a>
-                    </div>
-                </form>
-            </div>
-        </div>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 th:text="${athlete.id != null} ? '编辑运动员' : '添加运动员'">添加运动员</h2>
+        <a th:href="@{/athletes}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回列表
+        </a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${athlete.id != null} ? @{/athletes/{id}/edit(id=${athlete.id})} : @{/athletes/create}" 
+                  th:object="${athlete}" method="post">
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{name}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">性别 <span class="text-danger">*</span></label>
+                        <select class="form-select" th:field="*{gender}" required>
+                            <option value="">请选择</option>
+                            <option value="M">男</option>
+                            <option value="F">女</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">出生日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" th:field="*{birthDate}" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">身份证号</label>
+                        <input type="text" class="form-control" th:field="*{idCard}" maxlength="18">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">联系电话</label>
+                        <input type="text" class="form-control" th:field="*{phone}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">年龄组</label>
+                        <select class="form-select" th:field="*{ageGroup}">
+                            <option value="">请选择</option>
+                            <option value="U18">U18</option>
+                            <option value="U20">U20</option>
+                            <option value="U23">U23</option>
+                            <option value="OPEN">公开组</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">国籍</label>
+                        <input type="text" class="form-control" th:field="*{nationality}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">所属单位</label>
+                        <input type="text" class="form-control" th:field="*{organization}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">教练</label>
+                        <input type="text" class="form-control" th:field="*{coach}">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" th:field="*{email}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">紧急联系人</label>
+                        <input type="text" class="form-control" th:field="*{emergencyContact}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">紧急联系电话</label>
+                        <input type="text" class="form-control" th:field="*{emergencyPhone}">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">身高(cm)</label>
+                        <input type="number" class="form-control" th:field="*{height}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">体重(kg)</label>
+                        <input type="number" class="form-control" th:field="*{weight}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">状态</label>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{enabled}">
+                            <label class="form-check-label">启用</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">特长（逗号分隔）</label>
+                        <input type="text" class="form-control" name="specialtyItems" 
+                               placeholder="例如：短跑,跳远,铅球"
+                               th:value="${athlete.specialties}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">自定义标签（逗号分隔）</label>
+                        <input type="text" class="form-control" name="customTagItems" 
+                               placeholder="例如：潜力新星,种子选手"
+                               th:value="${athlete.customTags}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">个人简介</label>
+                    <textarea class="form-control" th:field="*{bio}" rows="3" placeholder="运动员简介..."></textarea>
+                </div>
+                    
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>保存
+                    </button>
+                    <a th:href="@{/athletes}" class="btn btn-outline-secondary ms-2">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 </body>
 </html>
