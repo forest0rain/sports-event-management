@@ -20,10 +20,8 @@
                 <!-- 消息提示 -->
                 <div th:replace="~{layout/fragments :: messages}"></div>
                 
-                <!-- 页面标题 -->
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h4" layout:fragment="page-title">页面标题</h1>
-                    <div layout:fragment="page-actions"></div>
+                <!-- 页面标题区域(由子页面提供) -->
+                <div layout:fragment="page-header">
                 </div>
                 
                 <!-- 页面内容 -->
