@@ -91,72 +91,60 @@
 </nav>
 
 <!-- 侧边栏 -->
-<nav th:fragment="sidebar" class="sb-sidenav accordion sb-sidenav-light bg-white" id="sidenavAccordion">
-    <div class="sb-sidenav-menu">
-        <div class="nav">
-            <div class="sb-sidenav-menu-heading text-muted small text-uppercase fw-bold">主菜单</div>
-            
+<div th:fragment="sidebar" class="d-flex flex-column p-3 bg-light" style="width: 250px; min-height: 100vh;">
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
             <a th:href="@{/dashboard}" class="nav-link">
-                <div class="sb-nav-link-icon"><i class="bi bi-house text-primary"></i></div>
-                仪表盘
+                <i class="bi bi-house me-2"></i>仪表盘
             </a>
-            
-            <!-- 管理员显示用户管理 -->
-            <a th:href="@{/admin/users}" class="nav-link" sec:authorize="hasRole('ADMIN')">
-                <div class="sb-nav-link-icon"><i class="bi bi-people text-info"></i></div>
-                用户管理
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/admin/users}" class="nav-link">
+                <i class="bi bi-people me-2"></i>用户管理
             </a>
-            
+        </li>
+        <li class="nav-item">
             <a th:href="@{/events}" class="nav-link">
-                <div class="sb-nav-link-icon"><i class="bi bi-calendar-event text-success"></i></div>
-                赛事管理
+                <i class="bi bi-calendar-event me-2"></i>赛事管理
             </a>
-            
-            <a th:href="@{/athletes}" class="nav-link" sec:authorize="hasRole('ADMIN')">
-                <div class="sb-nav-link-icon"><i class="bi bi-person-badge text-secondary"></i></div>
-                运动员管理
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/athletes}" class="nav-link">
+                <i class="bi bi-person-badge me-2"></i>运动员管理
             </a>
-            
+        </li>
+        <li class="nav-item">
             <a th:href="@{/schedules}" class="nav-link">
-                <div class="sb-nav-link-icon"><i class="bi bi-clock text-primary"></i></div>
-                赛程管理
+                <i class="bi bi-clock me-2"></i>赛程管理
             </a>
-            
-            <a th:href="@{/schedule-generation}" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'REFEREE', 'ORGANIZER')">
-                <div class="sb-nav-link-icon"><i class="bi bi-magic text-success"></i></div>
-                智能编排
+        </li>
+        <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE', 'ORGANIZER')">
+            <a th:href="@{/schedule-generation}" class="nav-link">
+                <i class="bi bi-magic me-2"></i>智能编排
             </a>
-            
+        </li>
+        <li class="nav-item">
             <a th:href="@{/results}" class="nav-link">
-                <div class="sb-nav-link-icon"><i class="bi bi-graph-up text-warning"></i></div>
-                成绩管理
+                <i class="bi bi-graph-up me-2"></i>成绩管理
             </a>
-            
-            <a th:href="@{/results/statistics}" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
-                <div class="sb-nav-link-icon"><i class="bi bi-bar-chart text-info"></i></div>
-                数据统计
+        </li>
+        <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
+            <a th:href="@{/results/statistics}" class="nav-link">
+                <i class="bi bi-bar-chart me-2"></i>数据统计
             </a>
-            
-            <a th:href="@{/admin/registrations}" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
-                <div class="sb-nav-link-icon"><i class="bi bi-clipboard-check text-primary"></i></div>
-                报名审核
+        </li>
+        <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
+            <a th:href="@{/admin/registrations}" class="nav-link">
+                <i class="bi bi-clipboard-check me-2"></i>报名审核
             </a>
-            
-            <a th:href="@{/admin/role-applications}" class="nav-link" sec:authorize="hasRole('ADMIN')">
-                <div class="sb-nav-link-icon"><i class="bi bi-person-check text-warning"></i></div>
-                角色审核
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/admin/role-applications}" class="nav-link">
+                <i class="bi bi-person-check me-2"></i>角色审核
             </a>
-        </div>
-    </div>
-    
-    <!-- 底部用户信息 -->
-    <div class="sb-sidenav-footer bg-light py-3">
-        <div class="small text-muted">
-            <i class="bi bi-person-circle me-1"></i>
-            <span sec:authentication="name">用户</span>
-        </div>
-    </div>
-</nav>
+        </li>
+    </ul>
+</div>
 
 <!-- 消息提示 -->
 <div th:fragment="messages">
