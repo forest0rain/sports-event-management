@@ -36,38 +36,6 @@ public class ResultController {
     private final ScheduleRepository scheduleRepository;
 
     /**
-     * 数据统计页面
-     */
-    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
-    @GetMapping("/statistics")
-    public String statisticsPage(Model model) {
-        // 基本统计
-        long totalEvents = eventRepository.count();
-        long totalAthletes = athleteRepository.count();
-        long totalResults = resultRepository.count();
-        long totalSchedules = scheduleRepository.count();
-
-        model.addAttribute("totalEvents", totalEvents);
-        model.addAttribute("totalParticipants", totalAthletes);
-        model.addAttribute("totalSportTypes", totalSchedules);
-        model.addAttribute("totalRecords", totalResults);
-
-        // 赛事状态分布
-        model.addAttribute("sportTypeStats", eventRepository.countByStatus());
-
-        // 运动员性别分布
-        model.addAttribute("countryStats", athleteRepository.countByGender());
-
-        // 成绩状态分布
-        model.addAttribute("resultByStatus", resultRepository.countByResultStatus());
-
-        // 奖牌榜数据
-        model.addAttribute("medalTable", resultRepository.countAwardsByAthletes());
-
-        return "result/statistics";
-    }
-
-    /**
      * 成绩列表
      */
     @GetMapping
@@ -203,8 +171,9 @@ public class ResultController {
     }
 
     /**
-     * 数据可视化
+     * 数据统计页面
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
     @GetMapping("/statistics")
     public String statistics(@RequestParam(required = false) Long eventId, Model model) {
         if (eventId != null) {
