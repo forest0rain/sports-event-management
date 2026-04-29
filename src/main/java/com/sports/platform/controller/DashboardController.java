@@ -73,15 +73,14 @@ public class DashboardController {
         model.addAttribute("ongoingEvents", ongoingEvents);
         model.addAttribute("registrationEvents", registrationEvents);
         
-        // ========== 图表数据（与统计页面相同的方式：JSON字符串嵌入模板） ==========
+        // ========== 图表数据（合并为一个JSON对象嵌入模板） ==========
         try {
-            model.addAttribute("eventStatusJson", objectMapper.writeValueAsString(
-                toListOfLists(eventRepository.countByStatus())));
-            model.addAttribute("athleteAgeJson", objectMapper.writeValueAsString(
-                toListOfLists(athleteRepository.countByAgeGroup())));
+            Map<String, Object> chartData = new HashMap<>();
+            chartData.put("eventStatus", toListOfLists(eventRepository.countByStatus()));
+            chartData.put("athleteAge", toListOfLists(athleteRepository.countByAgeGroup()));
+            model.addAttribute("chartDataJson", objectMapper.writeValueAsString(chartData));
         } catch (Exception e) {
-            model.addAttribute("eventStatusJson", "[]");
-            model.addAttribute("athleteAgeJson", "[]");
+            model.addAttribute("chartDataJson", "{}");
         }
         
         return "dashboard/index";

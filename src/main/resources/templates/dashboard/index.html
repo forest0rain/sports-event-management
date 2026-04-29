@@ -5,9 +5,8 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- 图表数据嵌入（与统计页面完全相同的方式） -->
-    <script id="event-status-json" type="application/json" th:utext="${eventStatusJson}">[]</script>
-    <script id="athlete-age-json" type="application/json" th:utext="${athleteAgeJson}">[]</script>
+    <!-- 图表数据嵌入（合并为一个JSON对象，与统计页面相同的方式） -->
+    <script id="chart-data" type="application/json" th:utext="${chartDataJson}">{}</script>
 
     <!-- 统计卡片 -->
     <div class="row g-3 mb-4">
@@ -148,34 +147,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 与统计页面完全相同的数据读取方式
-    function getJson(id) {
-        var el = document.getElementById(id);
-        if (!el) { console.warn('Element not found:', id); return []; }
+    // 读取合并的图表数据
+    function getChartData() {
+        var el = document.getElementById('chart-data');
+        if (!el) { console.warn('chart-data element not found'); return null; }
         var text = el.textContent.trim();
-        if (!text || text === '[]') return [];
+        if (!text || text === '{}') return null;
         try { return JSON.parse(text); }
-        catch(e) { console.error('Parse error for', id, e, text.substring(0, 100)); return []; }
+        catch(e) { console.error('Parse error:', e, text.substring(0, 200)); return null; }
     }
 
-    var eventStatusData = getJson('event-status-json');
-    var athleteAgeData = getJson('athlete-age-json');
-
-    console.log('Dashboard chart data:', {
-        eventStatus: eventStatusData.length,
-        athleteAge: athleteAgeData.length
-    });
+    var chartData = getChartData();
+    console.log('Dashboard chartData:', chartData);
 
     var statusMap = { 'DRAFT':'草稿','REGISTRATION':'报名中','ONGOING':'进行中','FINISHED':'已结束','CANCELLED':'已取消' };
 
     // 赛事状态分布
-    if (eventStatusData.length > 0) {
+    if (chartData && chartData.eventStatus && chartData.eventStatus.length > 0) {
         new Chart(document.getElementById('eventStatusChart'), {
             type: 'doughnut',
             data: {
-                labels: eventStatusData.map(function(i){return statusMap[i[0]]||i[0];}),
+                labels: chartData.eventStatus.map(function(i){return statusMap[i[0]]||i[0];}),
                 datasets: [{
-                    data: eventStatusData.map(function(i){return i[1];}),
+                    data: chartData.eventStatus.map(function(i){return i[1];}),
                     backgroundColor: ['#6c757d','#0dcaf0','#198754','#0d6efd','#dc3545'],
                     borderWidth: 3,
                     borderColor: '#fff',
@@ -192,14 +186,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 运动员年龄段分布
-    if (athleteAgeData.length > 0) {
+    if (chartData && chartData.athleteAge && chartData.athleteAge.length > 0) {
         new Chart(document.getElementById('athleteAgeChart'), {
             type: 'bar',
             data: {
-                labels: athleteAgeData.map(function(i){return i[0];}),
+                labels: chartData.athleteAge.map(function(i){return i[0];}),
                 datasets: [{
                     label: '运动员数量',
-                    data: athleteAgeData.map(function(i){return i[1];}),
+                    data: chartData.athleteAge.map(function(i){return i[1];}),
                     backgroundColor: '#0d6efd',
                     borderRadius: 4
                 }]
