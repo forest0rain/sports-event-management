@@ -16,8 +16,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 成绩管理控制器
@@ -195,28 +195,50 @@ public class ResultController {
         model.addAttribute("totalRegistrations", registrationRepository.count());
         model.addAttribute("totalResults", resultRepository.count());
         
+        // 将Object[]转为List，确保Thymeleaf正确序列化为JSON数组
         // 赛事状态分布
-        model.addAttribute("eventStatusData", eventRepository.countByStatus());
+        model.addAttribute("eventStatusData", toListOfLists(eventRepository.countByStatus()));
         
         // 运动员性别分布
-        model.addAttribute("athleteGenderData", athleteRepository.countByGender());
+        model.addAttribute("athleteGenderData", toListOfLists(athleteRepository.countByGender()));
         
         // 运动员年龄段分布
-        model.addAttribute("athleteAgeData", athleteRepository.countByAgeGroup());
+        model.addAttribute("athleteAgeData", toListOfLists(athleteRepository.countByAgeGroup()));
         
         // 成绩状态分布
-        model.addAttribute("resultStatusData", resultRepository.countByResultStatus());
+        model.addAttribute("resultStatusData", toListOfLists(resultRepository.countByResultStatus()));
         
         // Top运动员排名
-        model.addAttribute("topAthletesData", resultRepository.countAwardsByAthletes());
+        model.addAttribute("topAthletesData", toListOfLists(resultRepository.countAwardsByAthletes()));
         
-        // 月度趋势数据（简化版）
-        model.addAttribute("monthlyTrendData", getMonthlyTrendData());
+        // 月度趋势数据
+        model.addAttribute("monthlyTrendData", toListOfLists(getMonthlyTrendData()));
         
         // 赛事报名情况
-        model.addAttribute("eventRegistrationData", getEventRegistrationData());
+        model.addAttribute("eventRegistrationData", toListOfLists(getEventRegistrationData()));
+        
+        // 破纪录统计
+        model.addAttribute("recordStats", toListOfLists(recordStats));
         
         return "result/statistics";
+    }
+    
+    /**
+     * 将List<Object[]>转为List<List<Object>>，确保Thymeleaf正确序列化为JSON数组
+     */
+    private List<List<Object>> toListOfLists(List<Object[]> list) {
+        if (list == null) return Collections.emptyList();
+        return list.stream()
+            .map(arr -> {
+                List<Object> item = new ArrayList<>();
+                if (arr != null) {
+                    for (Object o : arr) {
+                        item.add(o);
+                    }
+                }
+                return item;
+            })
+            .collect(Collectors.toList());
     }
     
     /**
