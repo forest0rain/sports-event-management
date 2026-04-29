@@ -121,6 +121,10 @@ public class ScheduleGenerationService {
 
     /**
      * 贪心算法生成赛程
+     * 约束条件：
+     * 1. 同一场地同时段只能有一场比赛
+     * 2. 同一项目的轮次必须按顺序：PRELIMINARY -> SEMI_FINAL -> FINAL
+     * 3. 同一项目同时段只能有一场比赛
      */
     private ScheduleOptimizationResult greedyScheduleGeneration(
             List<LocalDate> eventDates,
@@ -138,13 +142,32 @@ public class ScheduleGenerationService {
             }
         }
 
-        // 运动员参赛记录: sportTypeId -> List<已参赛时间>
-        Map<Long, List<LocalTime>> athleteSchedules = new HashMap<>();
+        // 项目轮次记录: sportTypeId -> 当前已完成的最高轮次 (0=NONE, 1=PRELIMINARY, 2=SEMI_FINAL, 3=FINAL)
+        Map<Long, Integer> projectRoundCompleted = new HashMap<>();
+
+        // 轮次优先级映射
+        Map<String, Integer> roundPriority = new HashMap<>();
+        roundPriority.put("PRELIMINARY", 1);
+        roundPriority.put("SEMI_FINAL", 2);
+        roundPriority.put("FINAL", 3);
+
+        // 项目时间记录: sportTypeId -> date -> 已使用的时段列表 (用于同一项目不同时段约束)
+        Map<Long, Map<LocalDate, List<LocalTime[]>>> projectTimeSlots = new HashMap<>();
 
         int conflicts = 0;
 
         for (Schedule schedule : schedules) {
             Long sportTypeId = schedule.getSportType() != null ? schedule.getSportType().getId() : 0L;
+            String round = schedule.getRound();
+            Integer currentRoundPriority = roundPriority.getOrDefault(round, 1);
+            
+            // 检查是否可以编排该轮次（前置轮次必须已完成）
+            Integer maxCompletedRound = projectRoundCompleted.getOrDefault(sportTypeId, 0);
+            if (currentRoundPriority > maxCompletedRound + 1) {
+                // 前置轮次未完成，跳过此赛程（稍后再处理）
+                continue;
+            }
+
             OptimizedScheduleSlot bestSlot = null;
             int minConflicts = Integer.MAX_VALUE;
 
@@ -169,10 +192,24 @@ public class ScheduleGenerationService {
                             continue;  // 场地被占用，跳过这个场地
                         }
 
+                        // 检查同一项目此时段是否已有比赛
+                        Map<LocalDate, List<LocalTime[]>> projectSlots = projectTimeSlots.getOrDefault(sportTypeId, new HashMap<>());
+                        List<LocalTime[]> sameProjectSlots = projectSlots.getOrDefault(date, new ArrayList<>());
+                        boolean sameProjectConflict = false;
+                        for (LocalTime[] used : sameProjectSlots) {
+                            if (timesOverlap(timeSlot[0], timeSlot[1], used[0], used[1])) {
+                                sameProjectConflict = true;
+                                break;
+                            }
+                        }
+                        if (sameProjectConflict) {
+                            continue;  // 同一项目此时段已有比赛，跳过
+                        }
+
                         // 计算当前选择的冲突数
                         int currentConflicts = calculateConflicts(
                             date, timeSlot, venue.getId(),
-                            venueUsage, athleteSchedules, sportTypeId
+                            venueUsage, null, sportTypeId
                         );
 
                         if (currentConflicts < minConflicts) {
@@ -192,9 +229,11 @@ public class ScheduleGenerationService {
                                 venueUsage.get(date)
                                     .computeIfAbsent(venue.getId(), k -> new ArrayList<>())
                                     .add(new LocalTime[]{timeSlot[0], timeSlot[1]});
-                                // 更新运动员参赛记录
-                                athleteSchedules.computeIfAbsent(sportTypeId, k -> new ArrayList<>())
-                                    .add(timeSlot[1]);
+                                
+                                // 更新项目时段记录
+                                projectTimeSlots.computeIfAbsent(sportTypeId, k -> new HashMap<>())
+                                    .computeIfAbsent(date, k -> new ArrayList<>())
+                                    .add(new LocalTime[]{timeSlot[0], timeSlot[1]});
                                     
                                 // 添加到结果并跳出循环
                                 optimizedSchedules.add(bestSlot);
@@ -211,7 +250,102 @@ public class ScheduleGenerationService {
                 if (optimizedSchedules.stream().noneMatch(s -> s.getScheduleId().equals(finalBestSlot.getScheduleId()))) {
                     optimizedSchedules.add(finalBestSlot);
                     conflicts += minConflicts;
+                    
+                    // 更新场地使用记录
+                    venueUsage.get(bestSlot.getDate())
+                        .computeIfAbsent(bestSlot.getVenueId(), k -> new ArrayList<>())
+                        .add(new LocalTime[]{bestSlot.getStartTime(), bestSlot.getEndTime()});
+                    
+                    // 更新项目时段记录
+                    projectTimeSlots.computeIfAbsent(sportTypeId, k -> new HashMap<>())
+                        .computeIfAbsent(bestSlot.getDate(), k -> new ArrayList<>())
+                        .add(new LocalTime[]{bestSlot.getStartTime(), bestSlot.getEndTime()});
                 }
+            }
+            
+            // 更新项目轮次完成记录
+            if (bestSlot != null) {
+                Integer completedPriority = roundPriority.getOrDefault(round, 1);
+                Integer currentMax = projectRoundCompleted.getOrDefault(sportTypeId, 0);
+                if (completedPriority > currentMax) {
+                    projectRoundCompleted.put(sportTypeId, completedPriority);
+                }
+            }
+        }
+
+        // 对未编排的赛程（前置轮次未完成）进行第二轮编排
+        for (Schedule schedule : schedules) {
+            final Long scheduleId = schedule.getId();
+            // 检查是否已编排
+            if (optimizedSchedules.stream().anyMatch(s -> s.getScheduleId().equals(scheduleId))) {
+                continue;
+            }
+            
+            Long sportTypeId = schedule.getSportType() != null ? schedule.getSportType().getId() : 0L;
+            OptimizedScheduleSlot bestSlot = null;
+            int minConflicts = Integer.MAX_VALUE;
+
+            outerLoop2:
+            for (LocalDate date : eventDates) {
+                for (LocalTime[] timeSlot : TIME_SLOTS) {
+                    for (Venue venue : venues) {
+                        List<LocalTime[]> usedSlots = venueUsage.get(date).get(venue.getId());
+                        
+                        boolean isVenueOccupied = false;
+                        if (usedSlots != null) {
+                            for (LocalTime[] used : usedSlots) {
+                                if (timesOverlap(timeSlot[0], timeSlot[1], used[0], used[1])) {
+                                    isVenueOccupied = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isVenueOccupied) {
+                            continue;
+                        }
+
+                        // 检查同一项目此时段
+                        Map<LocalDate, List<LocalTime[]>> projectSlots = projectTimeSlots.getOrDefault(sportTypeId, new HashMap<>());
+                        List<LocalTime[]> sameProjectSlots = projectSlots.getOrDefault(date, new ArrayList<>());
+                        boolean sameProjectConflict = false;
+                        for (LocalTime[] used : sameProjectSlots) {
+                            if (timesOverlap(timeSlot[0], timeSlot[1], used[0], used[1])) {
+                                sameProjectConflict = true;
+                                break;
+                            }
+                        }
+                        if (sameProjectConflict) {
+                            continue;
+                        }
+
+                        int currentConflicts = calculateConflicts(
+                            date, timeSlot, venue.getId(),
+                            venueUsage, null, sportTypeId
+                        );
+
+                        if (currentConflicts < minConflicts) {
+                            minConflicts = currentConflicts;
+                            bestSlot = new OptimizedScheduleSlot();
+                            bestSlot.setScheduleId(schedule.getId());
+                            bestSlot.setEventId(schedule.getEvent() != null ? schedule.getEvent().getId() : null);
+                            bestSlot.setSportTypeId(sportTypeId);
+                            bestSlot.setDate(date);
+                            bestSlot.setStartTime(timeSlot[0]);
+                            bestSlot.setEndTime(timeSlot[1]);
+                            bestSlot.setVenueId(venue.getId());
+
+                            if (currentConflicts == 0) {
+                                optimizedSchedules.add(bestSlot);
+                                break outerLoop2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (bestSlot != null) {
+                optimizedSchedules.add(bestSlot);
+                conflicts += minConflicts;
             }
         }
 
