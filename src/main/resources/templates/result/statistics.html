@@ -1,531 +1,310 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/main}">
 <head>
     <title>数据统计</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        .stat-card {
-            transition: transform 0.2s;
-        }
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
         .stat-card .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
         }
-        .chart-card {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .chart-card .card-header {
-            border-radius: 12px 12px 0 0;
-            padding: 16px 20px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .chart-card .card-body {
-            padding: 20px;
-        }
-        .empty-chart {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 250px;
-            color: #adb5bd;
-            font-size: 14px;
-        }
-        .rank-badge {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-        }
+        .chart-card { border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .chart-card .card-header { border-radius: 12px 12px 0 0; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+        .chart-card .card-body { padding: 20px; }
+        .empty-chart { display: flex; align-items: center; justify-content: center; min-height: 250px; color: #adb5bd; font-size: 14px; }
+        .rank-badge { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
         .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
         .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #fff; }
         .rank-3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
     </style>
 </head>
 <body>
-    <div layout:fragment="content">
-        <!-- 隐藏的数据容器，用于传递后端数据到JS -->
-        <div id="statistics-data" style="display:none;"
-             th:data-event-status="${eventStatusJson}"
-             th:data-gender="${athleteGenderJson}"
-             th:data-age="${athleteAgeJson}"
-             th:data-result-status="${resultStatusJson}"
-             th:data-monthly="${monthlyTrendJson}"
-             th:data-event-reg="${eventRegistrationJson}"
-             th:data-record="${recordStatsJson}">
-        </div>
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0 fw-bold">数据统计</h4>
-            <span class="text-muted">更新时间: <span th:text="${#dates.format(new java.util.Date(), 'yyyy-MM-dd HH:mm')}"></span></span>
-        </div>
+<div layout:fragment="content">
+    <h4 class="mb-4 fw-bold">数据统计</h4>
 
-        <!-- 统计卡片 -->
-        <div class="row g-3 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm stat-card" style="border-radius: 12px;">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon me-3" style="background: rgba(13,110,253,0.1); color: #0d6efd;">
-                            <i class="bi bi-people-fill"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small">运动员总数</div>
-                            <div class="h3 mb-0 fw-bold" th:text="${totalAthletes}">0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm stat-card" style="border-radius: 12px;">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon me-3" style="background: rgba(25,135,84,0.1); color: #198754;">
-                            <i class="bi bi-trophy-fill"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small">赛事总数</div>
-                            <div class="h3 mb-0 fw-bold" th:text="${totalEvents}">0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm stat-card" style="border-radius: 12px;">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon me-3" style="background: rgba(255,193,7,0.1); color: #ffc107;">
-                            <i class="bi bi-clipboard-check-fill"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small">报名总数</div>
-                            <div class="h3 mb-0 fw-bold" th:text="${totalRegistrations}">0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm stat-card" style="border-radius: 12px;">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon me-3" style="background: rgba(220,53,69,0.1); color: #dc3545;">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small">成绩总数</div>
-                            <div class="h3 mb-0 fw-bold" th:text="${totalResults}">0</div>
-                        </div>
-                    </div>
+    <!-- 图表数据嵌入 -->
+    <script id="event-status-json" type="application/json" th:utext="${eventStatusJson}">[]</script>
+    <script id="athlete-gender-json" type="application/json" th:utext="${athleteGenderJson}">[]</script>
+    <script id="athlete-age-json" type="application/json" th:utext="${athleteAgeJson}">[]</script>
+    <script id="result-status-json" type="application/json" th:utext="${resultStatusJson}">[]</script>
+    <script id="monthly-trend-json" type="application/json" th:utext="${monthlyTrendJson}">[]</script>
+    <script id="event-registration-json" type="application/json" th:utext="${eventRegistrationJson}">[]</script>
+    <script id="record-stats-json" type="application/json" th:utext="${recordStatsJson}">[]</script>
+
+    <!-- 统计卡片 -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm stat-card" style="border-radius:12px;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon me-3" style="background:rgba(13,110,253,0.1);color:#0d6efd;"><i class="bi bi-people-fill"></i></div>
+                    <div><div class="text-muted small">运动员总数</div><div class="h3 mb-0 fw-bold" th:text="${totalAthletes}">0</div></div>
                 </div>
             </div>
         </div>
-
-        <!-- 第一行图表：赛事状态 + 性别分布 -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-pie-chart-fill text-primary me-2"></i>
-                        <h6 class="mb-0">赛事状态分布</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="eventStatusChart" height="280"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-gender-ambiguous text-info me-2"></i>
-                        <h6 class="mb-0">运动员性别分布</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="genderChart" height="280"></canvas>
-                    </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm stat-card" style="border-radius:12px;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon me-3" style="background:rgba(25,135,84,0.1);color:#198754;"><i class="bi bi-trophy-fill"></i></div>
+                    <div><div class="text-muted small">赛事总数</div><div class="h3 mb-0 fw-bold" th:text="${totalEvents}">0</div></div>
                 </div>
             </div>
         </div>
-
-        <!-- 第二行图表：年龄段分布 + 成绩状态 -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-bar-chart-fill text-success me-2"></i>
-                        <h6 class="mb-0">运动员年龄段分布</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="ageChart" height="280"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-clipboard-data text-warning me-2"></i>
-                        <h6 class="mb-0">成绩状态分布</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="resultStatusChart" height="280"></canvas>
-                    </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm stat-card" style="border-radius:12px;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon me-3" style="background:rgba(255,193,7,0.1);color:#ffc107;"><i class="bi bi-clipboard-check-fill"></i></div>
+                    <div><div class="text-muted small">报名总数</div><div class="h3 mb-0 fw-bold" th:text="${totalRegistrations}">0</div></div>
                 </div>
             </div>
         </div>
-
-        <!-- 第三行图表：月度趋势 + 赛事报名 -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-7">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-graph-up text-primary me-2"></i>
-                        <h6 class="mb-0">月度趋势</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="monthlyTrendChart" height="280"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-calendar-check text-danger me-2"></i>
-                        <h6 class="mb-0">赛事报名情况</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="eventRegChart" height="280"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 第四行：Top运动员排名 + 破纪录统计 -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-7">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-trophy-fill text-warning me-2"></i>
-                        <h6 class="mb-0">获奖运动员排名 TOP 10</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" th:if="${topAthletesData != null and !topAthletesData.isEmpty()}">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 60px;">排名</th>
-                                        <th>运动员</th>
-                                        <th style="width: 120px;" class="text-center">获奖次数</th>
-                                        <th style="width: 150px;">占比</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="item, iter : ${topAthletesData}">
-                                        <td>
-                                            <span th:if="${iter.index == 0}" class="rank-badge rank-1">1</span>
-                                            <span th:if="${iter.index == 1}" class="rank-badge rank-2">2</span>
-                                            <span th:if="${iter.index == 2}" class="rank-badge rank-3">3</span>
-                                            <span th:if="${iter.index > 2}" class="text-muted" th:text="${iter.index + 1}">4</span>
-                                        </td>
-                                        <td class="fw-medium" th:text="${item[0]}">运动员</td>
-                                        <td class="text-center">
-                                            <span class="fw-bold text-primary" th:text="${item[1]}">0</span>
-                                        </td>
-                                        <td>
-                                            <div class="progress" style="height: 8px; border-radius: 4px;">
-                                                <div class="progress-bar" 
-                                                     th:style="'width: ' + (${item[1]} / ${totalResults > 0 ? totalResults : 1} * 100) + '%'"
-                                                     style="background: linear-gradient(90deg, #0d6efd, #6ea8fe); border-radius: 4px;">
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div th:if="${topAthletesData == null or topAthletesData.isEmpty()}" class="empty-chart">
-                                <div class="text-center">
-                                    <i class="bi bi-inbox" style="font-size: 40px;"></i>
-                                    <p class="mt-2">暂无获奖数据</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="card chart-card">
-                    <div class="card-header bg-white d-flex align-items-center">
-                        <i class="bi bi-award text-danger me-2"></i>
-                        <h6 class="mb-0">破纪录统计</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="recordChart" height="280"></canvas>
-                    </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm stat-card" style="border-radius:12px;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon me-3" style="background:rgba(220,53,69,0.1);color:#dc3545;"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div><div class="text-muted small">成绩总数</div><div class="h3 mb-0 fw-bold" th:text="${totalResults}">0</div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var statusMap = {
-            'DRAFT': '草稿', 'REGISTRATION': '报名中', 'ONGOING': '进行中',
-            'FINISHED': '已结束', 'CANCELLED': '已取消'
-        };
+    <!-- 第一行：赛事状态 + 性别分布 -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-pie-chart-fill text-primary me-2"></i><h6 class="mb-0">赛事状态分布</h6>
+                </div>
+                <div class="card-body"><canvas id="eventStatusChart" height="280"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-gender-ambiguous text-info me-2"></i><h6 class="mb-0">运动员性别分布</h6>
+                </div>
+                <div class="card-body"><canvas id="genderChart" height="280"></canvas></div>
+            </div>
+        </div>
+    </div>
 
-        var resultStatusMap = {
-            'VALID': '有效', 'INVALID': '无效', 'PENDING': '待审核', 'PROTESTED': '申诉中'
-        };
+    <!-- 第二行：年龄段 + 成绩状态 -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-bar-chart-fill text-success me-2"></i><h6 class="mb-0">运动员年龄段分布</h6>
+                </div>
+                <div class="card-body"><canvas id="ageChart" height="280"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-clipboard-data text-warning me-2"></i><h6 class="mb-0">成绩状态分布</h6>
+                </div>
+                <div class="card-body"><canvas id="resultStatusChart" height="280"></canvas></div>
+            </div>
+        </div>
+    </div>
 
-        var chartColors = [
-            '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', 
-            '#20c997', '#fd7e14', '#0dcaf0', '#6610f2', '#d63384'
-        ];
+    <!-- 第三行：月度趋势 + 赛事报名 -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-graph-up text-primary me-2"></i><h6 class="mb-0">月度趋势</h6>
+                </div>
+                <div class="card-body"><canvas id="monthlyTrendChart" height="280"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-calendar-check text-danger me-2"></i><h6 class="mb-0">赛事报名情况</h6>
+                </div>
+                <div class="card-body"><canvas id="eventRegChart" height="280"></canvas></div>
+            </div>
+        </div>
+    </div>
 
-        // 从隐藏的数据容器读取JSON数据
-        var dataContainer = document.getElementById('statistics-data');
-        function getJsonData(attrName) {
-            var raw = dataContainer.getAttribute(attrName);
-            if (!raw || raw === '') return [];
-            try {
-                return JSON.parse(raw);
-            } catch(e) {
-                console.error('JSON parse error for ' + attrName, e, raw);
-                return [];
-            }
-        }
+    <!-- 第四行：Top运动员 + 破纪录 -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-trophy-fill text-warning me-2"></i><h6 class="mb-0">获奖运动员排名 TOP 10</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" th:if="${topAthletesData != null and !topAthletesData.isEmpty()}">
+                            <thead class="table-light">
+                                <tr><th style="width:60px;">排名</th><th>运动员</th><th style="width:120px;" class="text-center">获奖次数</th><th style="width:150px;">占比</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item, iter : ${topAthletesData}">
+                                    <td>
+                                        <span th:if="${iter.index == 0}" class="rank-badge rank-1">1</span>
+                                        <span th:if="${iter.index == 1}" class="rank-badge rank-2">2</span>
+                                        <span th:if="${iter.index == 2}" class="rank-badge rank-3">3</span>
+                                        <span th:if="${iter.index > 2}" class="text-muted" th:text="${iter.index + 1}">4</span>
+                                    </td>
+                                    <td class="fw-medium" th:text="${item[0]}">运动员</td>
+                                    <td class="text-center"><span class="fw-bold text-primary" th:text="${item[1]}">0</span></td>
+                                    <td>
+                                        <div class="progress" style="height:8px;border-radius:4px;">
+                                            <div class="progress-bar" th:style="'width:' + (${item[1]} / ${totalResults > 0 ? totalResults : 1} * 100) + '%'" style="background:linear-gradient(90deg,#0d6efd,#6ea8fe);border-radius:4px;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div th:if="${topAthletesData == null or topAthletesData.isEmpty()}" class="empty-chart">
+                            <div class="text-center"><i class="bi bi-inbox" style="font-size:40px;"></i><p class="mt-2">暂无获奖数据</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card chart-card">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <i class="bi bi-award text-danger me-2"></i><h6 class="mb-0">破纪录统计</h6>
+                </div>
+                <div class="card-body"><canvas id="recordChart" height="280"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        var eventStatusData = getJsonData('data-event-status');
-        var athleteGenderData = getJsonData('data-gender');
-        var athleteAgeData = getJsonData('data-age');
-        var resultStatusData = getJsonData('data-result-status');
-        var monthlyTrendData = getJsonData('data-monthly');
-        var eventRegistrationData = getJsonData('data-event-reg');
-        var recordStats = getJsonData('data-record');
+<th:block layout:fragment="scripts-extra">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getJson(id) {
+        var el = document.getElementById(id);
+        if (!el) { console.warn('Element not found:', id); return []; }
+        var text = el.textContent.trim();
+        if (!text || text === '[]') return [];
+        try { return JSON.parse(text); }
+        catch(e) { console.error('Parse error for', id, e, text.substring(0, 100)); return []; }
+    }
 
-        console.log('eventStatusData:', eventStatusData);
-        console.log('athleteGenderData:', athleteGenderData);
+    var eventStatusData = getJson('event-status-json');
+    var athleteGenderData = getJson('athlete-gender-json');
+    var athleteAgeData = getJson('athlete-age-json');
+    var resultStatusData = getJson('result-status-json');
+    var monthlyTrendData = getJson('monthly-trend-json');
+    var eventRegistrationData = getJson('event-registration-json');
+    var recordStats = getJson('record-stats-json');
 
-        // 赛事状态分布
-        if (eventStatusData && eventStatusData.length > 0) {
-            new Chart(document.getElementById('eventStatusChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: eventStatusData.map(function(i) { return statusMap[i[0]] || i[0]; }),
-                    datasets: [{
-                        data: eventStatusData.map(function(i) { return i[1]; }),
-                        backgroundColor: ['#6c757d', '#0dcaf0', '#198754', '#0d6efd', '#dc3545'],
-                        borderWidth: 3,
-                        borderColor: '#fff',
-                        hoverOffset: 6
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw + ' 项'; } } }
-                    },
-                    cutout: '55%'
-                }
-            });
-        }
-
-        // 性别分布
-        if (athleteGenderData && athleteGenderData.length > 0) {
-            new Chart(document.getElementById('genderChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: athleteGenderData.map(function(i) { return i[0] === 'M' ? '男' : (i[0] === 'F' ? '女' : i[0]); }),
-                    datasets: [{
-                        data: athleteGenderData.map(function(i) { return i[1]; }),
-                        backgroundColor: ['#0d6efd', '#e83e8c'],
-                        borderWidth: 3,
-                        borderColor: '#fff',
-                        hoverOffset: 6
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw + ' 人'; } } }
-                    },
-                    cutout: '55%'
-                }
-            });
-        }
-
-        // 年龄段分布
-        if (athleteAgeData && athleteAgeData.length > 0) {
-            var ageLabels = athleteAgeData.map(function(i) { return i[0] || '未知'; });
-            var ageValues = athleteAgeData.map(function(i) { return i[1]; });
-            new Chart(document.getElementById('ageChart'), {
-                type: 'bar',
-                data: {
-                    labels: ageLabels,
-                    datasets: [{
-                        label: '人数',
-                        data: ageValues,
-                        backgroundColor: ageLabels.map(function(_, idx) { return chartColors[idx % chartColors.length] + 'CC'; }),
-                        borderRadius: 6,
-                        borderSkipped: false,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                        x: { grid: { display: false } }
-                    } 
-                }
-            });
-        }
-
-        // 成绩状态
-        if (resultStatusData && resultStatusData.length > 0) {
-            new Chart(document.getElementById('resultStatusChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: resultStatusData.map(function(i) { return resultStatusMap[i[0]] || i[0]; }),
-                    datasets: [{
-                        data: resultStatusData.map(function(i) { return i[1]; }),
-                        backgroundColor: ['#198754', '#dc3545', '#ffc107', '#6c757d'],
-                        borderWidth: 3,
-                        borderColor: '#fff',
-                        hoverOffset: 6
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw + ' 条'; } } }
-                    },
-                    cutout: '55%'
-                }
-            });
-        }
-
-        // 月度趋势
-        if (monthlyTrendData && monthlyTrendData.length > 0) {
-            new Chart(document.getElementById('monthlyTrendChart'), {
-                type: 'line',
-                data: {
-                    labels: monthlyTrendData.map(function(i) { return i[0]; }),
-                    datasets: [
-                        {
-                            label: '赛事数',
-                            data: monthlyTrendData.map(function(i) { return i[1]; }),
-                            borderColor: '#0d6efd',
-                            backgroundColor: 'rgba(13,110,253,0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#0d6efd',
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: '报名数',
-                            data: monthlyTrendData.map(function(i) { return i[2]; }),
-                            borderColor: '#198754',
-                            backgroundColor: 'rgba(25,135,84,0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#198754',
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }
-                    ]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
-                    scales: { y: { beginAtZero: true } } 
-                }
-            });
-        }
-
-        // 赛事报名情况
-        if (eventRegistrationData && eventRegistrationData.length > 0) {
-            new Chart(document.getElementById('eventRegChart'), {
-                type: 'bar',
-                data: {
-                    labels: eventRegistrationData.map(function(i) { 
-                        var name = i[0]; 
-                        return name.length > 8 ? name.substring(0, 8) + '...' : name; 
-                    }),
-                    datasets: [
-                        {
-                            label: '最大容量',
-                            data: eventRegistrationData.map(function(i) { return i[1]; }),
-                            backgroundColor: 'rgba(220,53,69,0.5)',
-                            borderRadius: 4,
-                            barPercentage: 0.6
-                        },
-                        {
-                            label: '已报名',
-                            data: eventRegistrationData.map(function(i) { return i[2]; }),
-                            backgroundColor: 'rgba(13,110,253,0.6)',
-                            borderRadius: 4,
-                            barPercentage: 0.6
-                        }
-                    ]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    indexAxis: 'y', 
-                    plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
-                    scales: { x: { beginAtZero: true } } 
-                }
-            });
-        }
-
-        // 破纪录统计
-        if (recordStats && recordStats.length > 0) {
-            new Chart(document.getElementById('recordChart'), {
-                type: 'bar',
-                data: {
-                    labels: recordStats.map(function(i) { return i[0] || '未知'; }),
-                    datasets: [{
-                        label: '次数',
-                        data: recordStats.map(function(i) { return i[1]; }),
-                        backgroundColor: recordStats.map(function(_, idx) { return chartColors[idx % chartColors.length] + 'CC'; }),
-                        borderRadius: 6,
-                        borderSkipped: false,
-                        barPercentage: 0.5
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                        x: { grid: { display: false } }
-                    } 
-                }
-            });
-        }
+    console.log('Chart data loaded:', {
+        eventStatus: eventStatusData.length,
+        gender: athleteGenderData.length,
+        age: athleteAgeData.length,
+        resultStatus: resultStatusData.length,
+        monthly: monthlyTrendData.length,
+        eventReg: eventRegistrationData.length,
+        record: recordStats.length
     });
-    </script>
+
+    var statusMap = { 'DRAFT':'草稿','REGISTRATION':'报名中','ONGOING':'进行中','FINISHED':'已结束','CANCELLED':'已取消' };
+    var resultStatusMap = { 'VALID':'有效','INVALID':'无效','PENDING':'待审核','PROTESTED':'申诉中' };
+    var chartColors = ['#0d6efd','#198754','#ffc107','#dc3545','#6f42c1','#20c997','#fd7e14','#0dcaf0','#6610f2','#d63384'];
+
+    // 赛事状态分布
+    if (eventStatusData.length > 0) {
+        new Chart(document.getElementById('eventStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: eventStatusData.map(function(i){return statusMap[i[0]]||i[0];}),
+                datasets: [{ data: eventStatusData.map(function(i){return i[1];}), backgroundColor: ['#6c757d','#0dcaf0','#198754','#0d6efd','#dc3545'], borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } } } }
+        });
+    }
+
+    // 性别分布
+    if (athleteGenderData.length > 0) {
+        new Chart(document.getElementById('genderChart'), {
+            type: 'doughnut',
+            data: {
+                labels: athleteGenderData.map(function(i){return i[0]==='M'?'男':(i[0]==='F'?'女':i[0]);}),
+                datasets: [{ data: athleteGenderData.map(function(i){return i[1];}), backgroundColor: ['#0d6efd','#e83e8c'], borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } } } }
+        });
+    }
+
+    // 年龄段分布
+    if (athleteAgeData.length > 0) {
+        new Chart(document.getElementById('ageChart'), {
+            type: 'bar',
+            data: {
+                labels: athleteAgeData.map(function(i){return i[0]||'未知';}),
+                datasets: [{ label: '人数', data: athleteAgeData.map(function(i){return i[1];}), backgroundColor: athleteAgeData.map(function(_,idx){return chartColors[idx%chartColors.length]+'CC';}), borderRadius: 6, barPercentage: 0.6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    // 成绩状态
+    if (resultStatusData.length > 0) {
+        new Chart(document.getElementById('resultStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: resultStatusData.map(function(i){return resultStatusMap[i[0]]||i[0];}),
+                datasets: [{ data: resultStatusData.map(function(i){return i[1];}), backgroundColor: ['#198754','#dc3545','#ffc107','#6c757d'], borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } } } }
+        });
+    }
+
+    // 月度趋势
+    if (monthlyTrendData.length > 0) {
+        new Chart(document.getElementById('monthlyTrendChart'), {
+            type: 'line',
+            data: {
+                labels: monthlyTrendData.map(function(i){return i[0];}),
+                datasets: [
+                    { label: '赛事数', data: monthlyTrendData.map(function(i){return i[1];}), borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.1)', fill: true, tension: 0.4, pointRadius: 4 },
+                    { label: '报名数', data: monthlyTrendData.map(function(i){return i[2];}), borderColor: '#198754', backgroundColor: 'rgba(25,135,84,0.1)', fill: true, tension: 0.4, pointRadius: 4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    // 赛事报名情况
+    if (eventRegistrationData.length > 0) {
+        new Chart(document.getElementById('eventRegChart'), {
+            type: 'bar',
+            data: {
+                labels: eventRegistrationData.map(function(i){var n=i[0]; return n.length>8?n.substring(0,8)+'...':n;}),
+                datasets: [
+                    { label: '最大容量', data: eventRegistrationData.map(function(i){return i[1];}), backgroundColor: 'rgba(220,53,69,0.5)', borderRadius: 4, barPercentage: 0.6 },
+                    { label: '已报名', data: eventRegistrationData.map(function(i){return i[2];}), backgroundColor: 'rgba(13,110,253,0.6)', borderRadius: 4, barPercentage: 0.6 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { position: 'top' } }, scales: { x: { beginAtZero: true } } }
+        });
+    }
+
+    // 破纪录统计
+    if (recordStats.length > 0) {
+        new Chart(document.getElementById('recordChart'), {
+            type: 'bar',
+            data: {
+                labels: recordStats.map(function(i){return i[0]||'未知';}),
+                datasets: [{ label: '次数', data: recordStats.map(function(i){return i[1];}), backgroundColor: recordStats.map(function(_,idx){return chartColors[idx%chartColors.length]+'CC';}), borderRadius: 6, barPercentage: 0.5 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } }
+        });
+    }
+});
+</script>
+</th:block>
 </body>
 </html>

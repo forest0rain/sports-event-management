@@ -5,11 +5,6 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- 隐藏数据容器 -->
-    <div id="chart-data" style="display:none;"
-         th:data-event-status="${eventStatusJson}"
-         th:data-athlete-age="${athleteAgeGroupJson}"></div>
-
     <!-- 统计卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
@@ -153,79 +148,88 @@
             </div>
         </div>
     </div>
+    <!-- 图表数据嵌入 -->
+    <script id="event-status-data" type="application/json" th:utext="${eventStatusJson}">[]</script>
+    <script id="athlete-age-data" type="application/json" th:utext="${athleteAgeGroupJson}">[]</script>
 </div>
 
-<div layout:fragment="page-scripts">
+<th:block layout:fragment="scripts-extra">
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var dataEl = document.getElementById('chart-data');
-    if (!dataEl) return;
+    // 从 script type="application/json" 读取数据
+    var eventStatusEl = document.getElementById('event-status-data');
+    var athleteAgeEl = document.getElementById('athlete-age-data');
 
-    var eventStatusJson = dataEl.getAttribute('data-event-status');
-    var athleteAgeJson = dataEl.getAttribute('data-athlete-age');
+    var eventStatusData = [];
+    var athleteAgeData = [];
+
+    try {
+        if (eventStatusEl && eventStatusEl.textContent.trim()) {
+            eventStatusData = JSON.parse(eventStatusEl.textContent.trim());
+        }
+    } catch(e) { console.error('赛事状态数据解析错误:', e); }
+
+    try {
+        if (athleteAgeEl && athleteAgeEl.textContent.trim()) {
+            athleteAgeData = JSON.parse(athleteAgeEl.textContent.trim());
+        }
+    } catch(e) { console.error('年龄段数据解析错误:', e); }
+
+    console.log('赛事状态数据:', eventStatusData);
+    console.log('年龄段数据:', athleteAgeData);
 
     // 赛事状态分布图
-    if (eventStatusJson && eventStatusJson !== 'null' && eventStatusJson !== '[]') {
-        try {
-            var eventStatusData = JSON.parse(eventStatusJson);
-            if (eventStatusData.length > 0) {
-                document.getElementById('eventStatusEmpty').style.display = 'none';
-                var nameMap = {
-                    'DRAFT': '草稿', 'REGISTRATION': '报名中', 'ONGOING': '进行中',
-                    'FINISHED': '已结束', 'CANCELLED': '已取消'
-                };
-                var labels = eventStatusData.map(function(item) { return nameMap[item[0]] || item[0]; });
-                var values = eventStatusData.map(function(item) { return item[1]; });
-                var colors = ['#6c757d', '#0dcaf0', '#198754', '#0d6efd', '#dc3545'];
+    if (eventStatusData && eventStatusData.length > 0) {
+        document.getElementById('eventStatusEmpty').style.display = 'none';
+        var nameMap = {
+            'DRAFT': '草稿', 'REGISTRATION': '报名中', 'ONGOING': '进行中',
+            'FINISHED': '已结束', 'CANCELLED': '已取消'
+        };
+        var labels = eventStatusData.map(function(item) { return nameMap[item[0]] || item[0]; });
+        var values = eventStatusData.map(function(item) { return item[1]; });
+        var colors = ['#6c757d', '#0dcaf0', '#198754', '#0d6efd', '#dc3545'];
 
-                new Chart(document.getElementById('eventStatusChart'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{ data: values, backgroundColor: colors, borderWidth: 2 }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } }
-                    }
-                });
+        new Chart(document.getElementById('eventStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: values, backgroundColor: colors, borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
             }
-        } catch(e) { console.error('赛事状态图表错误:', e); }
+        });
     }
 
     // 运动员年龄段分布图
-    if (athleteAgeJson && athleteAgeJson !== 'null' && athleteAgeJson !== '[]') {
-        try {
-            var athleteAgeData = JSON.parse(athleteAgeJson);
-            if (athleteAgeData.length > 0) {
-                document.getElementById('athleteAgeEmpty').style.display = 'none';
-                var ageLabels = athleteAgeData.map(function(item) { return item[0]; });
-                var ageValues = athleteAgeData.map(function(item) { return item[1]; });
+    if (athleteAgeData && athleteAgeData.length > 0) {
+        document.getElementById('athleteAgeEmpty').style.display = 'none';
+        var ageLabels = athleteAgeData.map(function(item) { return item[0]; });
+        var ageValues = athleteAgeData.map(function(item) { return item[1]; });
 
-                new Chart(document.getElementById('athleteAgeChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: ageLabels,
-                        datasets: [{
-                            label: '运动员数量',
-                            data: ageValues,
-                            backgroundColor: '#0d6efd',
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                    }
-                });
+        new Chart(document.getElementById('athleteAgeChart'), {
+            type: 'bar',
+            data: {
+                labels: ageLabels,
+                datasets: [{
+                    label: '运动员数量',
+                    data: ageValues,
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
             }
-        } catch(e) { console.error('年龄段图表错误:', e); }
+        });
     }
 });
 </script>
-</div>
+</th:block>
 </body>
 </html>
