@@ -1,5 +1,6 @@
 package com.sports.platform.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sports.platform.entity.Event;
 import com.sports.platform.entity.RoleApplication;
 import com.sports.platform.repository.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 仪表盘控制器
@@ -28,6 +30,7 @@ public class DashboardController {
     private final ScheduleRepository scheduleRepository;
     private final ResultRepository resultRepository;
     private final RoleApplicationRepository roleApplicationRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * 首页/仪表盘
@@ -68,29 +71,31 @@ public class DashboardController {
         model.addAttribute("ongoingEvents", ongoingEvents);
         model.addAttribute("registrationEvents", registrationEvents);
         
-        // 添加图表数据
+        // 添加图表数据（JSON字符串方式）
         addChartData(model);
         
         return "dashboard/index";
     }
     
     /**
-     * 添加图表数据到模型
+     * 添加图表数据到模型（JSON字符串方式，避免Thymeleaf inline JS问题）
      */
     private void addChartData(Model model) {
-        // 赛事状态分布
-        model.addAttribute("eventStatusData", eventRepository.countByStatus());
-        
-        // 运动员统计数据
-        model.addAttribute("athleteCount", athleteRepository.count());
-        model.addAttribute("athleteByGender", athleteRepository.countByGender());
-        model.addAttribute("athleteByAgeGroup", athleteRepository.countByAgeGroup());
-        
-        // 成绩统计
-        model.addAttribute("resultCount", resultRepository.count());
-        model.addAttribute("resultByStatus", resultRepository.countByResultStatus());
-        
-        // Top运动员
-        model.addAttribute("topAthletes", resultRepository.countAwardsByAthletes());
+        try {
+            // 赛事状态分布 - Object[]转为List
+            List<List<Object>> eventStatus = eventRepository.countByStatus().stream()
+                    .map(arr -> List.of(arr[0], arr[1]))
+                    .collect(Collectors.toList());
+            model.addAttribute("eventStatusJson", objectMapper.writeValueAsString(eventStatus));
+            
+            // 运动员年龄段分布 - Object[]转为List
+            List<List<Object>> athleteAgeGroup = athleteRepository.countByAgeGroup().stream()
+                    .map(arr -> List.of(arr[0], arr[1]))
+                    .collect(Collectors.toList());
+            model.addAttribute("athleteAgeGroupJson", objectMapper.writeValueAsString(athleteAgeGroup));
+        } catch (Exception e) {
+            model.addAttribute("eventStatusJson", "[]");
+            model.addAttribute("athleteAgeGroupJson", "[]");
+        }
     }
 }
