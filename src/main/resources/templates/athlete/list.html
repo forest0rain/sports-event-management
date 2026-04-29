@@ -24,7 +24,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">国家</label>
-                        <input type="text" class="form-control" name="country" th:value="${param.country}" placeholder="输入国家">
+                        <input type="text" class="form-control" name="keyword" th:value="${keyword}" placeholder="输入运动员姓名或单位">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">性别</label>
@@ -72,11 +72,11 @@
                             <tr th:each="athlete : ${athletes}">
                                 <td th:text="${athlete.id}">1</td>
                                 <td th:text="${athlete.name}">运动员姓名</td>
-                                <td th:text="${athlete.gender == 'MALE' ? '男' : '女'}">男</td>
-                                <td th:text="${athlete.country}">中国</td>
-                                <td th:text="${#temporals.format(athlete.dateOfBirth, 'yyyy-MM-dd')}">2000-01-01</td>
-                                <td th:text="${athlete.sportType?.name}">田径</td>
-                                <td th:text="${athlete.bestPerformance ?: '-'}">10.5s</td>
+                                <td th:text="${athlete.gender == 'M' ? '男' : '女'}">男</td>
+                                <td th:text="${athlete.nationality ?: '-'}">中国</td>
+                                <td th:text="${athlete.birthDate != null ? #temporals.format(athlete.birthDate, 'yyyy-MM-dd') : '-'}">2000-01-01</td>
+                                <td th:text="${athlete.specialties ?: '-'}">田径</td>
+                                <td th:text="${athlete.personalBests ?: '-'}">10.5s</td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <a th:href="@{/athletes/{id}(id=${athlete.id})}" class="btn btn-outline-primary">
@@ -95,7 +95,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(athletes)}">
+                            <tr th:if="${athletes.totalElements == 0}">
                                 <td colspan="8" class="text-center text-muted py-4">
                                     <i class="bi bi-inbox fs-4 d-block mb-2"></i>
                                     暂无运动员数据

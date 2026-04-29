@@ -106,7 +106,7 @@
                                 <td th:text="${reg.event?.name}">赛事名称</td>
                                 <td th:text="${reg.athlete?.name}">运动员姓名</td>
                                 <td th:text="${reg.athlete?.gender == 'MALE' ? '男' : '女'}">男</td>
-                                <td th:text="${reg.athlete?.country}">中国</td>
+                                <td th:text="${reg.athlete?.nationality}">中国</td>
                                 <td th:text="${reg.sportType?.name}">田径</td>
                                 <td th:text="${#temporals.format(reg.registrationTime, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
                                 <td>
@@ -137,7 +137,7 @@
                                     </th:block>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(registrations)}">
+                            <tr th:if="${registrations.totalElements == 0}">
                                 <td colspan="9" class="text-center text-muted py-4">
                                     <i class="bi bi-inbox fs-4 d-block mb-2"></i>
                                     暂无报名数据

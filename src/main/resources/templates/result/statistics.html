@@ -239,11 +239,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 年龄段分布
+    var ageGroupMap = { 'U18':'少年组(U18)', 'U20':'青年组(U20)', 'U23':'U23组', 'OPEN':'成年组(OPEN)' };
     if (athleteAgeData.length > 0) {
         new Chart(document.getElementById('ageChart'), {
             type: 'bar',
             data: {
-                labels: athleteAgeData.map(function(i){return i[0]||'未知';}),
+                labels: athleteAgeData.map(function(i){return ageGroupMap[i[0]]||i[0]||'未知';}),
                 datasets: [{ label: '人数', data: athleteAgeData.map(function(i){return i[1];}), backgroundColor: athleteAgeData.map(function(_,idx){return chartColors[idx%chartColors.length]+'CC';}), borderRadius: 6, barPercentage: 0.6 }]
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } }

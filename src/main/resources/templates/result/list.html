@@ -121,13 +121,12 @@
                             <tbody>
                                 <tr th:each="result : ${results}">
                                     <td th:text="${result.id}">1</td>
-                                    <td th:text="${result.schedule?.event?.name ?: result.event?.name}">赛事名称</td>
+                                    <td th:text="${result.schedule?.event?.name ?: '-'}">赛事名称</td>
                                     <td th:text="${result.schedule?.sportType?.name ?: result.sportType?.name}">田径</td>
                                     <td th:text="${result.athlete?.name}">运动员姓名</td>
-                                    <td th:text="${result.athlete?.country}">中国</td>
+                                    <td th:text="${result.athlete?.nationality}">中国</td>
                                     <td>
-                                        <span class="fw-bold" th:text="${result.score}">10.5</span>
-                                        <span th:text="${result.unit ?: ''}">秒</span>
+                                        <span class="fw-bold" th:text="${result.scoreText ?: result.score}">10.5</span>
                                     </td>
                                     <td>
                                         <th:block th:if="${result.rank == 1}">
@@ -139,15 +138,13 @@
                                         <th:block th:elseif="${result.rank == 3}">
                                             <i class="bi bi-trophy-fill" style="color: #CD7F32;"></i> 第3名
                                         </th:block>
-                                        <th:block th:else>
+                                        <th:block th:elseif="${result.rank != null}">
                                             第<span th:text="${result.rank}">4</span>名
                                         </th:block>
                                     </td>
                                     <td>
-                                        <span th:if="${result.isRecord}" class="badge bg-danger">
-                                            <i class="bi bi-star-fill me-1"></i>破纪录
-                                        </span>
-                                        <span th:unless="${result.isRecord}" class="text-muted">-</span>
+                                        <span th:if="${result.recordType != null and result.recordType != '无'}" class="badge bg-danger" th:text="${result.recordType}">破纪录</span>
+                                        <span th:if="${result.recordType == null or result.recordType == '无'}" class="text-muted">-</span>
                                     </td>
                                     <td class="text-center">
                                         <a th:href="@{/results/{id}(id=${result.id})}" class="btn btn-sm btn-outline-primary">
@@ -160,7 +157,7 @@
                                         </a>
                                     </td>
                                 </tr>
-                                <tr th:if="${#lists.isEmpty(results)}">
+                                <tr th:if="${results.totalElements == 0}">
                                     <td colspan="9" class="text-center text-muted py-4">
                                         <i class="bi bi-inbox fs-4 d-block mb-2"></i>
                                         暂无成绩数据

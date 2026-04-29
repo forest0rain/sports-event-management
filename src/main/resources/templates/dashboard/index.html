@@ -186,11 +186,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 运动员年龄段分布
+    var ageGroupMap = { 'U18':'少年组(U18)', 'U20':'青年组(U20)', 'U23':'U23组', 'OPEN':'成年组(OPEN)' };
     if (chartData && chartData.athleteAge && chartData.athleteAge.length > 0) {
         new Chart(document.getElementById('athleteAgeChart'), {
             type: 'bar',
             data: {
-                labels: chartData.athleteAge.map(function(i){return i[0];}),
+                labels: chartData.athleteAge.map(function(i){return ageGroupMap[i[0]]||i[0];}),
                 datasets: [{
                     label: '运动员数量',
                     data: chartData.athleteAge.map(function(i){return i[1];}),

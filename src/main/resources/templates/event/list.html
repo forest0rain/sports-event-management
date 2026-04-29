@@ -105,7 +105,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(events)}">
+                            <tr th:if="${events.totalElements == 0}">
                                 <td colspan="8" class="text-center text-muted py-4">
                                     <i class="bi bi-inbox fs-4 d-block mb-2"></i>
                                     暂无赛事数据
