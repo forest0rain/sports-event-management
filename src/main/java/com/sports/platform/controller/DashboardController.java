@@ -6,10 +6,13 @@ import com.sports.platform.entity.RoleApplication;
 import com.sports.platform.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.List;
@@ -71,31 +74,33 @@ public class DashboardController {
         model.addAttribute("ongoingEvents", ongoingEvents);
         model.addAttribute("registrationEvents", registrationEvents);
         
-        // 添加图表数据（JSON字符串方式）
-        addChartData(model);
-        
         return "dashboard/index";
     }
-    
+
     /**
-     * 添加图表数据到模型（JSON字符串方式，避免Thymeleaf inline JS问题）
+     * 仪表盘图表数据API - 通过REST接口返回JSON，前端用fetch获取
+     * 完全绕开Thymeleaf Layout Dialect数据传递问题
      */
-    private void addChartData(Model model) {
+    @GetMapping(value = "/chart-data", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getChartData() {
+        Map<String, Object> data = new HashMap<>();
         try {
-            // 赛事状态分布 - Object[]转为List
+            // 赛事状态分布
             List<List<Object>> eventStatus = eventRepository.countByStatus().stream()
                     .map(arr -> List.of(arr[0], arr[1]))
                     .collect(Collectors.toList());
-            model.addAttribute("eventStatusJson", objectMapper.writeValueAsString(eventStatus));
-            
-            // 运动员年龄段分布 - Object[]转为List
+            data.put("eventStatus", eventStatus);
+
+            // 运动员年龄段分布
             List<List<Object>> athleteAgeGroup = athleteRepository.countByAgeGroup().stream()
                     .map(arr -> List.of(arr[0], arr[1]))
                     .collect(Collectors.toList());
-            model.addAttribute("athleteAgeGroupJson", objectMapper.writeValueAsString(athleteAgeGroup));
+            data.put("athleteAgeGroup", athleteAgeGroup);
         } catch (Exception e) {
-            model.addAttribute("eventStatusJson", "[]");
-            model.addAttribute("athleteAgeGroupJson", "[]");
+            data.put("eventStatus", List.of());
+            data.put("athleteAgeGroup", List.of());
         }
+        return ResponseEntity.ok(data);
     }
 }

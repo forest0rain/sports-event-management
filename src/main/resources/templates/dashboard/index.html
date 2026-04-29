@@ -5,10 +5,6 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- 隐藏数据容器 -->
-    <script type="application/json" id="event-status-data" th:utext="${eventStatusJson}">[]</script>
-    <script type="application/json" id="athlete-age-data" th:utext="${athleteAgeGroupJson}">[]</script>
-
     <!-- 统计卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
@@ -84,7 +80,7 @@
                     <div style="height:250px;position:relative;">
                         <canvas id="eventStatusChart"></canvas>
                         <div id="eventStatusEmpty" class="text-center text-muted d-flex align-items-center justify-content-center" style="height:250px;position:absolute;top:0;left:0;right:0;">
-                            <span>暂无数据</span>
+                            <span>加载中...</span>
                         </div>
                     </div>
                 </div>
@@ -99,7 +95,7 @@
                     <div style="height:250px;position:relative;">
                         <canvas id="athleteAgeChart"></canvas>
                         <div id="athleteAgeEmpty" class="text-center text-muted d-flex align-items-center justify-content-center" style="height:250px;position:absolute;top:0;left:0;right:0;">
-                            <span>暂无数据</span>
+                            <span>加载中...</span>
                         </div>
                     </div>
                 </div>
@@ -158,26 +154,30 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 从script标签读取数据
-    var eventStatusData = [];
-    var athleteAgeData = [];
+    // 通过REST API获取图表数据，完全绕开Thymeleaf数据传递问题
+    fetch('/dashboard/chart-data')
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            console.log('仪表盘图表数据:', data);
+            renderEventStatusChart(data.eventStatus || []);
+            renderAthleteAgeChart(data.athleteAgeGroup || []);
+        })
+        .catch(function(err) {
+            console.error('获取仪表盘图表数据失败:', err);
+            document.getElementById('eventStatusEmpty').querySelector('span').textContent = '暂无数据';
+            document.getElementById('athleteAgeEmpty').querySelector('span').textContent = '暂无数据';
+        });
 
-    try {
-        var esEl = document.getElementById('event-status-data');
-        if (esEl && esEl.textContent.trim()) eventStatusData = JSON.parse(esEl.textContent);
-    } catch(e) { console.error('赛事状态数据解析错误:', e); }
-
-    try {
-        var aaEl = document.getElementById('athlete-age-data');
-        if (aaEl && aaEl.textContent.trim()) athleteAgeData = JSON.parse(aaEl.textContent);
-    } catch(e) { console.error('年龄段数据解析错误:', e); }
-
-    console.log('赛事状态数据:', eventStatusData);
-    console.log('年龄段数据:', athleteAgeData);
-
-    // 赛事状态分布图
-    if (eventStatusData && eventStatusData.length > 0) {
+    function renderEventStatusChart(eventStatusData) {
+        if (!eventStatusData || eventStatusData.length === 0) {
+            document.getElementById('eventStatusEmpty').querySelector('span').textContent = '暂无数据';
+            return;
+        }
         document.getElementById('eventStatusEmpty').style.display = 'none';
+
         var nameMap = {
             'DRAFT': '草稿', 'REGISTRATION': '报名中', 'ONGOING': '进行中',
             'FINISHED': '已结束', 'CANCELLED': '已取消'
@@ -200,9 +200,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 运动员年龄段分布图
-    if (athleteAgeData && athleteAgeData.length > 0) {
+    function renderAthleteAgeChart(athleteAgeData) {
+        if (!athleteAgeData || athleteAgeData.length === 0) {
+            document.getElementById('athleteAgeEmpty').querySelector('span').textContent = '暂无数据';
+            return;
+        }
         document.getElementById('athleteAgeEmpty').style.display = 'none';
+
         var ageLabels = athleteAgeData.map(function(item) { return item[0]; });
         var ageValues = athleteAgeData.map(function(item) { return item[1]; });
 
