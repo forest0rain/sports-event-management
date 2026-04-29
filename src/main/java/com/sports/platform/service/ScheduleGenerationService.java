@@ -158,7 +158,7 @@ public class ScheduleGenerationService {
 
         for (Schedule schedule : schedules) {
             Long sportTypeId = schedule.getSportType() != null ? schedule.getSportType().getId() : 0L;
-            String round = schedule.getRound();
+            String round = schedule.getSportType() != null ? schedule.getSportType().getRoundType().name() : null;
             Integer currentRoundPriority = roundPriority.getOrDefault(round, 1);
             
             // 检查是否可以编排该轮次（前置轮次必须已完成）
