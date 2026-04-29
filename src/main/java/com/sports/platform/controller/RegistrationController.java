@@ -121,7 +121,7 @@ public class RegistrationController {
         }
         
         model.addAttribute("registrations", registrations);
-        return "admin/registration-list";
+        return "admin/registrations";
     }
 
     /**
