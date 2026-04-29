@@ -60,7 +60,7 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-body text-center">
                             <h6 class="text-muted mb-1">总成绩数</h6>
-                            <h3 class="mb-0 text-primary" th:text="${results.size()}">0</h3>
+                            <h3 class="mb-0 text-primary" th:text="${results.totalElements ?: results.size()}">0</h3>
                         </div>
                     </div>
                 </div>
