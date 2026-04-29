@@ -1,109 +1,173 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="zh-CN">
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>成绩列表 - 体育赛事管理平台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <title>成绩管理</title>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{fragments/navbar :: navbar(true)}"></div>
+    <div layout:fragment="page-title">成绩管理</div>
 
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <span sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">成绩管理</span>
-                <span sec:authorize="hasAnyRole('ATHLETE', 'SPECTATOR') and not hasAnyRole('ADMIN', 'REFEREE')">成绩列表</span>
-            </h2>
-            <!-- 录入按钮 - 仅管理员和裁判可见 -->
-            <a sec:authorize="hasAnyRole('ADMIN', 'REFEREE')" th:href="@{/results/record}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>录入成绩
-            </a>
-        </div>
+    <div layout:fragment="content">
+        <!-- 页面内容 -->
+        <div class="container-fluid">
+            <!-- 搜索筛选 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form th:action="@{/results}" method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">赛事</label>
+                            <select class="form-select" name="eventId">
+                                <option value="">全部赛事</option>
+                                <option th:each="event : ${events}" 
+                                        th:value="${event.id}" 
+                                        th:text="${event.name}"
+                                        th:selected="${param.eventId == event.id}">赛事名称</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">运动员</label>
+                            <input type="text" class="form-control" name="athleteName" th:value="${param.athleteName}" placeholder="输入运动员姓名">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">名次</label>
+                            <select class="form-select" name="rank">
+                                <option value="">全部</option>
+                                <option value="1" th:selected="${param.rank == '1'}">第1名</option>
+                                <option value="2" th:selected="${param.rank == '2'}">第2名</option>
+                                <option value="3" th:selected="${param.rank == '3'}">第3名</option>
+                                <option value="other" th:selected="${param.rank == 'other'}">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>搜索
+                            </button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a th:href="@{/results/new}" class="btn btn-success w-100" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
+                                <i class="bi bi-plus-lg me-1"></i>录入成绩
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-        <!-- 成功/错误消息 -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-            <i class="bi bi-check-circle me-2"></i>
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-circle me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+            <!-- 统计卡片 -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">总成绩数</h6>
+                            <h3 class="mb-0 text-primary" th:text="${results.size()}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">前三名</h6>
+                            <h3 class="mb-0 text-success" th:text="${topThreeCount ?: 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">破纪录</h6>
+                            <h3 class="mb-0 text-warning" th:text="${recordCount ?: 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">有记录赛事</h6>
+                            <h3 class="mb-0 text-info" th:text="${eventCount ?: 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- 权限提示 - 观众和运动员可见 -->
-        <div sec:authorize="hasAnyRole('ATHLETE', 'SPECTATOR') and not hasAnyRole('ADMIN', 'REFEREE')" class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>
-            您当前仅有查看权限，如需管理成绩请联系管理员。
-        </div>
-        
-        <!-- 成绩列表 -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>运动员</th>
-                                <th>比赛项目</th>
-                                <th>成绩</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="result, stat : ${results}">
-                                <td th:text="${stat.count}">1</td>
-                                <td>
-                                    <a th:href="@{/athletes/{id}(id=${result.athlete.id})}" 
-                                       th:text="${result.athlete.name}">运动员</a>
-                                </td>
-                                <td th:text="${result.sportType != null} ? ${result.sportType.name} : '-'">项目</td>
-                                <td>
-                                    <strong th:text="${result.scoreText}">成绩</strong>
-                                </td>
-                                <td>
-                                    <span th:if="${result.status == 'VALID'}" class="badge bg-success">有效</span>
-                                    <span th:if="${result.status == 'INVALID'}" class="badge bg-danger">无效</span>
-                                    <span th:if="${result.status == 'DNS'}" class="badge bg-secondary">弃权</span>
-                                    <span th:if="${result.status == 'DNF'}" class="badge bg-warning">未完成</span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <!-- 查看按钮 - 所有用户可见 -->
-                                        <a th:href="@{/results/{id}(id=${result.id})}" 
-                                           class="btn btn-outline-info" title="详情">
+            <!-- 成绩列表 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>成绩列表</h5>
+                    <a th:href="@{/results/statistics}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-bar-chart me-1"></i>统计分析
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>赛事</th>
+                                    <th>运动项目</th>
+                                    <th>运动员</th>
+                                    <th>国家</th>
+                                    <th>成绩</th>
+                                    <th>排名</th>
+                                    <th>破纪录</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="result : ${results}">
+                                    <td th:text="${result.id}">1</td>
+                                    <td th:text="${result.schedule?.event?.name ?: result.event?.name}">赛事名称</td>
+                                    <td th:text="${result.schedule?.sportType?.name ?: result.sportType?.name}">田径</td>
+                                    <td th:text="${result.athlete?.name}">运动员姓名</td>
+                                    <td th:text="${result.athlete?.country}">中国</td>
+                                    <td>
+                                        <span class="fw-bold" th:text="${result.score}">10.5</span>
+                                        <span th:text="${result.unit ?: ''}">秒</span>
+                                    </td>
+                                    <td>
+                                        <th:block th:if="${result.rank == 1}">
+                                            <i class="bi bi-trophy-fill text-warning"></i> 第1名
+                                        </th:block>
+                                        <th:block th:elseif="${result.rank == 2}">
+                                            <i class="bi bi-trophy-fill text-secondary"></i> 第2名
+                                        </th:block>
+                                        <th:block th:elseif="${result.rank == 3}">
+                                            <i class="bi bi-trophy-fill" style="color: #CD7F32;"></i> 第3名
+                                        </th:block>
+                                        <th:block th:else>
+                                            第<span th:text="${result.rank}">4</span>名
+                                        </th:block>
+                                    </td>
+                                    <td>
+                                        <span th:if="${result.isRecord}" class="badge bg-danger">
+                                            <i class="bi bi-star-fill me-1"></i>破纪录
+                                        </span>
+                                        <span th:unless="${result.isRecord}" class="text-muted">-</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a th:href="@{/results/{id}(id=${result.id})}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <!-- 编辑按钮 - 仅管理员和裁判可见 -->
-                                        <a sec:authorize="hasAnyRole('ADMIN', 'REFEREE')" 
-                                           th:href="@{/results/{id}/edit(id=${result.id})}" 
-                                           class="btn btn-outline-primary" title="编辑">
+                                        <a th:href="@{/results/{id}/edit(id=${result.id})}" 
+                                           class="btn btn-sm btn-outline-secondary"
+                                           sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr th:if="${results == null or #lists.isEmpty(results)}">
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                    <p class="mt-2">暂无成绩数据</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(results)}">
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                        暂无成绩数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

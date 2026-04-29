@@ -1,144 +1,111 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="zh-CN">
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>赛事列表 - 体育赛事管理平台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <title>赛事管理</title>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{fragments/navbar :: navbar(false)}"></div>
+    <div layout:fragment="page-title">赛事管理</div>
 
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <span sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">赛事管理</span>
-                <span sec:authorize="hasAnyRole('ATHLETE', 'SPECTATOR') and not hasAnyRole('ADMIN', 'REFEREE')">赛事列表</span>
-            </h2>
-            <!-- 创建按钮 - 仅管理员和裁判可见 -->
-            <a sec:authorize="hasAnyRole('ADMIN', 'REFEREE')" th:href="@{/events/create}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>创建赛事
-            </a>
-        </div>
-
-        <!-- 成功/错误消息 -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-            <i class="bi bi-check-circle me-2"></i>
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-circle me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- 权限提示 - 观众和运动员可见 -->
-        <div sec:authorize="hasAnyRole('ATHLETE', 'SPECTATOR') and not hasAnyRole('ADMIN', 'REFEREE')" class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>
-            您当前仅有查看权限，如需管理赛事请联系管理员。
-        </div>
-
-        <!-- 搜索和筛选 -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="get" class="row g-3">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="keyword" 
-                               th:value="${keyword}" placeholder="搜索赛事名称...">
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="status">
-                            <option value="">全部状态</option>
-                            <option value="DRAFT" th:selected="${status == 'DRAFT'}">草稿</option>
-                            <option value="REGISTRATION" th:selected="${status == 'REGISTRATION'}">报名中</option>
-                            <option value="ONGOING" th:selected="${status == 'ONGOING'}">进行中</option>
-                            <option value="FINISHED" th:selected="${status == 'FINISHED'}">已结束</option>
-                            <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">已取消</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-outline-primary w-100">
-                            <i class="bi bi-search me-1"></i>搜索
-                        </button>
-                    </div>
-                </form>
+    <div layout:fragment="content">
+        <!-- 页面内容 -->
+        <div class="container-fluid">
+            <!-- 搜索筛选 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form th:action="@{/events}" method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">赛事名称</label>
+                            <input type="text" class="form-control" name="name" th:value="${param.name}" placeholder="输入赛事名称">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" name="status">
+                                <option value="">全部</option>
+                                <option value="DRAFT" th:selected="${param.status == 'DRAFT'}">草稿</option>
+                                <option value="PUBLISHED" th:selected="${param.status == 'PUBLISHED'}">已发布</option>
+                                <option value="COMPLETED" th:selected="${param.status == 'COMPLETED'}">已完成</option>
+                                <option value="CANCELLED" th:selected="${param.status == 'CANCELLED'}">已取消</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">日期范围</label>
+                            <input type="date" class="form-control" name="startDate" th:value="${param.startDate}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>搜索
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-        
-        <!-- 赛事列表 -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>赛事名称</th>
-                                <th>类型</th>
-                                <th>开始日期</th>
-                                <th>结束日期</th>
-                                <th>状态</th>
-                                <th>参赛人数</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="event : ${events}">
-                                <td>
-                                    <a th:href="@{/events/{id}(id=${event.id})}" 
-                                       th:text="${event.name}">赛事名称</a>
-                                </td>
-                                <td th:text="${event.eventType}">类型</td>
-                                <td th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}">开始日期</td>
-                                <td th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}">结束日期</td>
-                                <td>
-                                    <span th:if="${event.status == 'DRAFT'}" class="badge bg-secondary">草稿</span>
-                                    <span th:if="${event.status == 'REGISTRATION'}" class="badge bg-primary">报名中</span>
-                                    <span th:if="${event.status == 'ONGOING'}" class="badge bg-success">进行中</span>
-                                    <span th:if="${event.status == 'FINISHED'}" class="badge bg-info">已结束</span>
-                                    <span th:if="${event.status == 'CANCELLED'}" class="badge bg-danger">已取消</span>
-                                </td>
-                                <td>
-                                    <span th:text="${event.currentParticipants}">0</span>/<span th:text="${event.maxParticipants}">100</span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <!-- 查看按钮 - 所有用户可见 -->
-                                        <a th:href="@{/events/{id}(id=${event.id})}" 
-                                           class="btn btn-outline-info" title="查看">
+
+            <!-- 操作按钮 -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">共 <span th:text="${events.size()}">0</span> 条记录</h5>
+                <a th:href="@{/events/new}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>创建赛事
+                </a>
+            </div>
+
+            <!-- 赛事列表 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>赛事名称</th>
+                                    <th>地点</th>
+                                    <th>开始日期</th>
+                                    <th>结束日期</th>
+                                    <th>报名人数</th>
+                                    <th>状态</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="event : ${events}">
+                                    <td th:text="${event.id}">1</td>
+                                    <td>
+                                        <a th:href="@{/events/{id}(id=${event.id})}" th:text="${event.name}">赛事名称</a>
+                                    </td>
+                                    <td th:text="${event.location}">地点</td>
+                                    <td th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}">2024-01-01</td>
+                                    <td th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}">2024-01-03</td>
+                                    <td th:text="${event.registrationCount ?: 0}">0</td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${event.status == 'PUBLISHED' ? 'bg-success' : 
+                                                               event.status == 'DRAFT' ? 'bg-secondary' : 
+                                                               event.status == 'COMPLETED' ? 'bg-primary' : 'bg-danger'}"
+                                              th:text="${event.status}">状态</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a th:href="@{/events/{id}(id=${event.id})}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <!-- 编辑按钮 - 仅管理员和裁判可见 -->
-                                        <a sec:authorize="hasAnyRole('ADMIN', 'REFEREE')" 
-                                           th:href="@{/events/{id}/edit(id=${event.id})}" 
-                                           class="btn btn-outline-primary" title="编辑">
+                                        <a th:href="@{/events/{id}/edit(id=${event.id})}" class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr th:if="${events == null or #lists.isEmpty(events)}">
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                    <p class="mt-2">暂无赛事数据</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- 分页信息 -->
-                <div th:if="${events != null and not #lists.isEmpty(events)}" class="text-center text-muted mt-3">
-                    <span th:text="'共 ' + ${events.totalElements} + ' 条记录'">共 0 条记录</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(events)}">
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                        暂无赛事数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

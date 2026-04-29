@@ -1,150 +1,116 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/main}">
-
 <head>
-    <title>用户管理 - 体育赛事管理平台</title>
+    <title>用户管理</title>
 </head>
-
 <body>
-<div layout:fragment="content">
-    <div class="container-fluid">
-        <!-- 页面标题 -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-people"></i> 用户管理</h2>
-            <a th:href="@{/admin/users/create}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> 添加用户
-            </a>
-        </div>
+    <div layout:fragment="page-title">用户管理</div>
 
-        <!-- 搜索和筛选 -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form th:action="@{/admin/users}" method="get" class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">搜索</label>
-                        <input type="text" class="form-control" name="keyword" 
-                               th:value="${keyword}" placeholder="用户名/邮箱/姓名">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">角色</label>
-                        <select class="form-select" name="role">
-                            <option value="">全部角色</option>
-                            <option th:each="r : ${roles}" 
-                                    th:value="${r.code}" 
-                                    th:text="${r.name}"
-                                    th:selected="${role == r.code}"></option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-secondary me-2">
-                            <i class="bi bi-search"></i> 搜索
-                        </button>
-                        <a th:href="@{/admin/users}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-counterclockwise"></i> 重置
-                        </a>
-                    </div>
-                </form>
+    <div layout:fragment="content">
+        <!-- 页面内容 -->
+        <div class="container-fluid">
+            <!-- 搜索筛选 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form th:action="@{/admin/users}" method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-control" name="username" th:value="${param.username}" placeholder="输入用户名">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">角色</label>
+                            <select class="form-select" name="role">
+                                <option value="">全部</option>
+                                <option value="ADMIN" th:selected="${param.role == 'ADMIN'}">管理员</option>
+                                <option value="REFEREE" th:selected="${param.role == 'REFEREE'}">裁判</option>
+                                <option value="ATHLETE" th:selected="${param.role == 'ATHLETE'}">运动员</option>
+                                <option value="SPECTATOR" th:selected="${param.role == 'SPECTATOR'}">观众</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" name="enabled">
+                                <option value="">全部</option>
+                                <option value="true" th:selected="${param.enabled == 'true'}">启用</option>
+                                <option value="false" th:selected="${param.enabled == 'false'}">禁用</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>搜索
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
 
-        <!-- 用户列表 -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>用户名</th>
-                                <th>真实姓名</th>
-                                <th>邮箱</th>
-                                <th>手机号</th>
-                                <th>角色</th>
-                                <th>状态</th>
-                                <th>创建时间</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="user : ${users.content}">
-                                <td th:text="${user.id}"></td>
-                                <td>
-                                    <a th:href="@{/admin/users/{id}(id=${user.id})}" 
-                                       th:text="${user.username}"></a>
-                                </td>
-                                <td th:text="${user.realName ?: '-'}"></td>
-                                <td th:text="${user.email ?: '-'}"></td>
-                                <td th:text="${user.phone ?: '-'}"></td>
-                                <td>
-                                    <span th:each="role, iter : ${user.roles}" 
-                                          class="badge bg-info me-1"
-                                          th:text="${role.name}"></span>
-                                </td>
-                                <td>
-                                    <span th:if="${user.enabled}" class="badge bg-success">启用</span>
-                                    <span th:unless="${user.enabled}" class="badge bg-danger">禁用</span>
-                                </td>
-                                <td th:text="${#temporals.format(user.createdTime, 'yyyy-MM-dd')}"></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" 
-                                           class="btn btn-outline-primary">
+            <!-- 操作按钮 -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">共 <span th:text="${users.size()}">0</span> 名用户</h5>
+                <a th:href="@{/admin/users/new}" class="btn btn-primary">
+                    <i class="bi bi-person-plus me-1"></i>添加用户
+                </a>
+            </div>
+
+            <!-- 用户列表 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>邮箱</th>
+                                    <th>角色</th>
+                                    <th>状态</th>
+                                    <th>注册时间</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td th:text="${user.id}">1</td>
+                                    <td th:text="${user.username}">用户名</td>
+                                    <td th:text="${user.email}">email@example.com</td>
+                                    <td>
+                                        <th:block th:each="role, iter : ${user.roles}">
+                                            <span class="badge"
+                                                  th:classappend="${role.name == 'ROLE_ADMIN' ? 'bg-danger' : 
+                                                                   role.name == 'ROLE_REFEREE' ? 'bg-warning text-dark' : 
+                                                                   role.name == 'ROLE_ATHLETE' ? 'bg-success' : 'bg-secondary'}"
+                                                  th:text="${#strings.replace(role.name, 'ROLE_', '')}">角色</span>
+                                        </th:block>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${user.enabled ? 'bg-success' : 'bg-secondary'}"
+                                              th:text="${user.enabled ? '启用' : '禁用'}">状态</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
+                                    <td class="text-center">
+                                        <a th:href="@{/admin/users/{id}(id=${user.id})}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" 
-                                              method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-warning" 
-                                                    th:title="${user.enabled ? '禁用' : '启用'}">
-                                                <i th:class="${user.enabled ? 'bi bi-slash-circle' : 'bi bi-check-circle'}"></i>
-                                            </button>
-                                        </form>
-                                        <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" 
-                                              method="post" class="d-inline"
-                                              onsubmit="return confirm('确定要删除该用户吗？')">
-                                            <button type="submit" class="btn btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr th:if="${users.content.isEmpty()}">
-                                <td colspan="9" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                    暂无数据
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(users)}">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                        暂无用户数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
-                <!-- 分页 -->
-                <nav th:if="${users.totalPages > 1}" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item" th:classappend="${users.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/users(page=0, keyword=${keyword}, role=${role})}">首页</a>
-                        </li>
-                        <li class="page-item" th:classappend="${users.hasPrevious()} ? '' : 'disabled'">
-                            <a class="page-link" th:href="@{/admin/users(page=${users.number - 1}, keyword=${keyword}, role=${role})}">上一页</a>
-                        </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, users.totalPages - 1)}"
-                            th:classappend="${i == users.number} ? 'active'">
-                            <a class="page-link" th:href="@{/admin/users(page=${i}, keyword=${keyword}, role=${role})}"
-                               th:text="${i + 1}"></a>
-                        </li>
-                        <li class="page-item" th:classappend="${users.hasNext()} ? '' : 'disabled'">
-                            <a class="page-link" th:href="@{/admin/users(page=${users.number + 1}, keyword=${keyword}, role=${role})}">下一页</a>
-                        </li>
-                        <li class="page-item" th:classappend="${users.last} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/users(page=${users.totalPages - 1}, keyword=${keyword}, role=${role})}">末页</a>
-                        </li>
-                    </ul>
-                </nav>
             </div>
         </div>
     </div>
-</div>
 </body>
 </html>

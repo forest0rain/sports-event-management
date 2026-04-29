@@ -1,118 +1,156 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="zh-CN">
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>赛程列表 - 体育赛事管理平台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <title>赛程管理</title>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{fragments/navbar :: navbar(false)}"></div>
+    <div layout:fragment="page-title">赛程管理</div>
 
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <span sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">赛程管理</span>
-                <span sec:authorize="hasAnyRole('ATHLETE', 'SPECTATOR') and not hasAnyRole('ADMIN', 'REFEREE')">赛程列表</span>
-            </h2>
-            <!-- 创建按钮 - 仅管理员和裁判可见 -->
-            <div sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
-                <a th:href="@{/schedules/create}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>创建赛程
-                </a>
+    <div layout:fragment="content">
+        <!-- 页面内容 -->
+        <div class="container-fluid">
+            <!-- 搜索筛选 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form th:action="@{/schedules}" method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">赛事</label>
+                            <select class="form-select" name="eventId">
+                                <option value="">全部赛事</option>
+                                <option th:each="event : ${events}" 
+                                        th:value="${event.id}" 
+                                        th:text="${event.name}"
+                                        th:selected="${param.eventId == event.id}">赛事名称</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">场地</label>
+                            <select class="form-select" name="venueId">
+                                <option value="">全部场地</option>
+                                <option th:each="venue : ${venues}" 
+                                        th:value="${venue.id}" 
+                                        th:text="${venue.name}"
+                                        th:selected="${param.venueId == venue.id}">场地名称</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">日期</label>
+                            <input type="date" class="form-control" name="date" th:value="${param.date}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>搜索
+                            </button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a th:href="@{/schedule-generation}" class="btn btn-success w-100">
+                                <i class="bi bi-magic me-1"></i>智能编排
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
 
-        <!-- 成功/错误消息 -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-            <i class="bi bi-check-circle me-2"></i>
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-circle me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+            <!-- 统计卡片 -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">总赛程</h6>
+                            <h3 class="mb-0 text-primary" th:text="${schedules.size()}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">已编排</h6>
+                            <h3 class="mb-0 text-success" th:text="${scheduledCount ?: 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">待编排</h6>
+                            <h3 class="mb-0 text-warning" th:text="${pendingCount ?: 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">进行中</h6>
+                            <h3 class="mb-0 text-info" th:text="${inProgressCount ?: 0}">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- 权限提示 - 观众和运动员可见 -->
-        <div sec:authorize="hasAnyRole('ATHLETE', 'SPECTATOR') and not hasAnyRole('ADMIN', 'REFEREE')" class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>
-            您当前仅有查看权限，如需管理赛程请联系管理员。
-        </div>
-
-        <!-- 日期显示 -->
-        <div class="alert alert-info">
-            <i class="bi bi-calendar-date me-2"></i>
-            <span th:text="${#temporals.format(selectedDate, 'yyyy年MM月dd日')}">日期</span> 的比赛安排
-        </div>
-        
-        <!-- 赛程列表 -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>比赛时间</th>
-                                <th>赛事名称</th>
-                                <th>比赛项目</th>
-                                <th>场地</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="schedule : ${schedules}">
-                                <td>
-                                    <span th:text="${#temporals.format(schedule.date, 'MM-dd')}">日期</span>
-                                    <span th:text="${#temporals.format(schedule.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(schedule.endTime, 'HH:mm')}">时间</span>
-                                </td>
-                                <td>
-                                    <a th:href="@{/events/{id}(id=${schedule.event.id})}" 
-                                       th:text="${schedule.event.name}">赛事</a>
-                                </td>
-                                <td th:text="${schedule.sportType != null} ? ${schedule.sportType.name} : '-'">项目</td>
-                                <td th:text="${schedule.venue != null} ? ${schedule.venue.name} : '-'">场地</td>
-                                <td>
-                                    <span th:if="${schedule.status == 'SCHEDULED'}" class="badge bg-secondary">待进行</span>
-                                    <span th:if="${schedule.status == 'ONGOING'}" class="badge bg-success">进行中</span>
-                                    <span th:if="${schedule.status == 'COMPLETED'}" class="badge bg-info">已完成</span>
-                                    <span th:if="${schedule.status == 'CANCELLED'}" class="badge bg-danger">已取消</span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <!-- 查看按钮 - 所有用户可见 -->
-                                        <a th:href="@{/schedules/{id}(id=${schedule.id})}" 
-                                           class="btn btn-outline-info" title="详情">
+            <!-- 赛程列表 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>赛程列表</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>日期</th>
+                                    <th>时间</th>
+                                    <th>场地</th>
+                                    <th>运动项目</th>
+                                    <th>轮次</th>
+                                    <th>状态</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="schedule : ${schedules}">
+                                    <td th:text="${schedule.id}">1</td>
+                                    <td th:text="${#temporals.format(schedule.date, 'yyyy-MM-dd')}">2024-01-01</td>
+                                    <td>
+                                        <span th:text="${schedule.startTime}">09:00</span> - 
+                                        <span th:text="${schedule.endTime}">10:00</span>
+                                    </td>
+                                    <td th:text="${schedule.venue?.name}">主场地</td>
+                                    <td th:text="${schedule.sportType?.name}">田径</td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${schedule.roundType}">预赛</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${schedule.status == 'SCHEDULED' ? 'bg-success' : 
+                                                               schedule.status == 'IN_PROGRESS' ? 'bg-primary' : 
+                                                               schedule.status == 'COMPLETED' ? 'bg-info' : 'bg-warning'}"
+                                              th:text="${schedule.status}">状态</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a th:href="@{/schedules/{id}(id=${schedule.id})}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <!-- 编辑按钮 - 仅管理员和裁判可见 -->
-                                        <a sec:authorize="hasAnyRole('ADMIN', 'REFEREE')" 
-                                           th:href="@{/schedules/{id}/edit(id=${schedule.id})}" 
-                                           class="btn btn-outline-primary" title="编辑">
+                                        <a th:href="@{/schedules/{id}/edit(id=${schedule.id})}" class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr th:if="${schedules == null or #lists.isEmpty(schedules)}">
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
-                                    <p class="mt-2">当日暂无赛程安排</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(schedules)}">
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                        暂无赛程数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
