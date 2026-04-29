@@ -10,141 +10,137 @@
     <div layout:fragment="page-title">报名审核</div>
 
     <div layout:fragment="content">
-        <!-- 页面内容 -->
-        <div class="container-fluid">
-            <!-- 统计卡片 -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted mb-1">待审核</h6>
-                            <h3 class="mb-0 text-warning" th:text="${pendingCount ?: 0}">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted mb-1">今日新增</h6>
-                            <h3 class="mb-0 text-info" th:text="${todayCount ?: 0}">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted mb-1">本周新增</h6>
-                            <h3 class="mb-0 text-primary" th:text="${weekCount ?: 0}">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted mb-1">本月新增</h6>
-                            <h3 class="mb-0 text-success" th:text="${monthCount ?: 0}">0</h3>
-                        </div>
+        <!-- 统计卡片 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-1">待审核</h6>
+                        <h3 class="mb-0 text-warning" th:text="${pendingCount ?: 0}">0</h3>
                     </div>
                 </div>
             </div>
-
-            <!-- 筛选标签 -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="d-flex gap-2">
-                        <a th:href="@{/admin/registrations(status=)}" 
-                           class="btn"
-                           th:classappend="${param.status == null || param.status.isEmpty()} ? 'btn-primary' : 'btn-outline-primary'">
-                            全部
-                        </a>
-                        <a th:href="@{/admin/registrations(status=PENDING)}" 
-                           class="btn"
-                           th:classappend="${param.status == 'PENDING'} ? 'btn-warning' : 'btn-outline-warning'">
-                            待审核
-                        </a>
-                        <a th:href="@{/admin/registrations(status=APPROVED)}" 
-                           class="btn"
-                           th:classappend="${param.status == 'APPROVED'} ? 'btn-success' : 'btn-outline-success'">
-                            已通过
-                        </a>
-                        <a th:href="@{/admin/registrations(status=REJECTED)}" 
-                           class="btn"
-                           th:classappend="${param.status == 'REJECTED'} ? 'btn-danger' : 'btn-outline-danger'">
-                            已拒绝
-                        </a>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-1">已通过</h6>
+                        <h3 class="mb-0 text-success" th:text="${approvedCount ?: 0}">0</h3>
                     </div>
                 </div>
             </div>
-
-            <!-- 报名列表 -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>报名列表</h5>
-                    <span class="badge bg-secondary" th:text="${registrations.size()} + '条记录'">0条记录</span>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>赛事</th>
-                                    <th>运动员</th>
-                                    <th>性别</th>
-                                    <th>国家</th>
-                                    <th>运动项目</th>
-                                    <th>报名时间</th>
-                                    <th>状态</th>
-                                    <th class="text-center">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="reg : ${registrations}">
-                                    <td th:text="${reg.id}">1</td>
-                                    <td th:text="${reg.event?.name}">赛事名称</td>
-                                    <td th:text="${reg.athlete?.name}">运动员姓名</td>
-                                    <td th:text="${reg.athlete?.gender == 'MALE' ? '男' : '女'}">男</td>
-                                    <td th:text="${reg.athlete?.country}">中国</td>
-                                    <td th:text="${reg.sportType?.name}">田径</td>
-                                    <td th:text="${#temporals.format(reg.registrationTime, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
-                                    <td>
-                                        <span class="badge"
-                                              th:classappend="${reg.status == 'APPROVED' ? 'bg-success' : 
-                                                               reg.status == 'PENDING' ? 'bg-warning text-dark' : 'bg-danger'}"
-                                              th:text="${reg.status}">状态</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <a th:href="@{/admin/registrations/{id}(id=${reg.id})}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>详情
-                                        </a>
-                                        <th:block th:if="${reg.status == 'PENDING'}">
-                                            <form th:action="@{/admin/registrations/{id}/approve(id=${reg.id})}" 
-                                                  method="post" style="display:inline;">
-                                                <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-check-lg"></i>通过
-                                                </button>
-                                            </form>
-                                            <form th:action="@{/admin/registrations/{id}/reject(id=${reg.id})}" 
-                                                  method="post" style="display:inline;">
-                                                <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-x-lg"></i>拒绝
-                                                </button>
-                                            </form>
-                                        </th:block>
-                                    </td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(registrations)}">
-                                    <td colspan="9" class="text-center text-muted py-4">
-                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                        暂无报名数据
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-1">已拒绝</h6>
+                        <h3 class="mb-0 text-danger" th:text="${rejectedCount ?: 0}">0</h3>
                     </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-1">总报名数</h6>
+                        <h3 class="mb-0 text-primary" th:text="${totalCount ?: 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选标签 -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex gap-2">
+                    <a th:href="@{/admin/registrations(status=)}" 
+                       class="btn"
+                       th:classappend="${param.status == null || param.status.isEmpty()} ? 'btn-primary' : 'btn-outline-primary'">
+                        全部
+                    </a>
+                    <a th:href="@{/admin/registrations(status=PENDING)}" 
+                       class="btn"
+                       th:classappend="${param.status == 'PENDING'} ? 'btn-warning' : 'btn-outline-warning'">
+                        待审核
+                    </a>
+                    <a th:href="@{/admin/registrations(status=APPROVED)}" 
+                       class="btn"
+                       th:classappend="${param.status == 'APPROVED'} ? 'btn-success' : 'btn-outline-success'">
+                        已通过
+                    </a>
+                    <a th:href="@{/admin/registrations(status=REJECTED)}" 
+                       class="btn"
+                       th:classappend="${param.status == 'REJECTED'} ? 'btn-danger' : 'btn-outline-danger'">
+                        已拒绝
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 报名列表 -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>报名列表</h5>
+                <span class="badge bg-secondary" th:text="${registrations.size()} + '条记录'">0条记录</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>赛事</th>
+                                <th>运动员</th>
+                                <th>性别</th>
+                                <th>国家</th>
+                                <th>运动项目</th>
+                                <th>报名时间</th>
+                                <th>状态</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="reg : ${registrations}">
+                                <td th:text="${reg.id}">1</td>
+                                <td th:text="${reg.event?.name}">赛事名称</td>
+                                <td th:text="${reg.athlete?.name}">运动员姓名</td>
+                                <td th:text="${reg.athlete?.gender == 'MALE' ? '男' : '女'}">男</td>
+                                <td th:text="${reg.athlete?.country}">中国</td>
+                                <td th:text="${reg.sportType?.name}">田径</td>
+                                <td th:text="${#temporals.format(reg.registrationTime, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${reg.status == 'APPROVED' ? 'bg-success' : 
+                                                           reg.status == 'PENDING' ? 'bg-warning text-dark' : 'bg-danger'}"
+                                          th:text="${reg.status}">状态</span>
+                                </td>
+                                <td class="text-center">
+                                    <th:block th:if="${reg.status == 'PENDING'}">
+                                        <form th:action="@{/admin/registrations/{id}/approve(id=${reg.id})}" 
+                                              method="post" style="display:inline;">
+                                            <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg"></i>通过
+                                            </button>
+                                        </form>
+                                        <form th:action="@{/admin/registrations/{id}/reject(id=${reg.id})}" 
+                                              method="post" style="display:inline;">
+                                            <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x-lg"></i>拒绝
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                    <th:block th:if="${reg.status != 'PENDING'}">
+                                        <span class="text-muted">-</span>
+                                    </th:block>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(registrations)}">
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                    暂无报名数据
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
