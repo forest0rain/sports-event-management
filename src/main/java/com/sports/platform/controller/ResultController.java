@@ -181,44 +181,60 @@ public class ResultController {
             model.addAttribute("statistics", stats);
         }
         
-        // 获取破纪录统计
-        List<Object[]> recordStats = resultService.getRecordStatistics();
-        model.addAttribute("recordStats", recordStats);
-        
         model.addAttribute("eventId", eventId);
         
-        // ========== 添加统计数据供页面图表使用 ==========
-        
-        // 基本统计
+        // ========== 基本统计 ==========
         model.addAttribute("totalEvents", eventRepository.count());
         model.addAttribute("totalAthletes", athleteRepository.count());
         model.addAttribute("totalRegistrations", registrationRepository.count());
         model.addAttribute("totalResults", resultRepository.count());
         
-        // 将Object[]转为List，确保Thymeleaf正确序列化为JSON数组
-        // 赛事状态分布
-        model.addAttribute("eventStatusData", toListOfLists(eventRepository.countByStatus()));
-        
-        // 运动员性别分布
-        model.addAttribute("athleteGenderData", toListOfLists(athleteRepository.countByGender()));
-        
-        // 运动员年龄段分布
-        model.addAttribute("athleteAgeData", toListOfLists(athleteRepository.countByAgeGroup()));
-        
-        // 成绩状态分布
-        model.addAttribute("resultStatusData", toListOfLists(resultRepository.countByResultStatus()));
-        
-        // Top运动员排名
-        model.addAttribute("topAthletesData", toListOfLists(resultRepository.countAwardsByAthletes()));
-        
-        // 月度趋势数据
-        model.addAttribute("monthlyTrendData", toListOfLists(getMonthlyTrendData()));
-        
-        // 赛事报名情况
-        model.addAttribute("eventRegistrationData", toListOfLists(getEventRegistrationData()));
-        
-        // 破纪录统计
-        model.addAttribute("recordStats", toListOfLists(recordStats));
+        // ========== 图表数据（JSON字符串，通过data属性传递） ==========
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            
+            // 赛事状态分布
+            model.addAttribute("eventStatusJson", mapper.writeValueAsString(
+                toListOfLists(eventRepository.countByStatus())));
+            
+            // 运动员性别分布
+            model.addAttribute("athleteGenderJson", mapper.writeValueAsString(
+                toListOfLists(athleteRepository.countByGender())));
+            
+            // 运动员年龄段分布
+            model.addAttribute("athleteAgeJson", mapper.writeValueAsString(
+                toListOfLists(athleteRepository.countByAgeGroup())));
+            
+            // 成绩状态分布
+            model.addAttribute("resultStatusJson", mapper.writeValueAsString(
+                toListOfLists(resultRepository.countByResultStatus())));
+            
+            // 月度趋势
+            model.addAttribute("monthlyTrendJson", mapper.writeValueAsString(
+                toListOfLists(getMonthlyTrendData())));
+            
+            // 赛事报名情况
+            model.addAttribute("eventRegistrationJson", mapper.writeValueAsString(
+                toListOfLists(getEventRegistrationData())));
+            
+            // 破纪录统计
+            List<Object[]> recordStats = resultService.getRecordStatistics();
+            model.addAttribute("recordStatsJson", mapper.writeValueAsString(
+                toListOfLists(recordStats)));
+            // Top运动员排名（用于表格，不需要JSON）
+            model.addAttribute("topAthletesData", toListOfLists(resultRepository.countAwardsByAthletes()));
+            
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            // 如果序列化失败，设置空数据
+            model.addAttribute("eventStatusJson", "[]");
+            model.addAttribute("athleteGenderJson", "[]");
+            model.addAttribute("athleteAgeJson", "[]");
+            model.addAttribute("resultStatusJson", "[]");
+            model.addAttribute("monthlyTrendJson", "[]");
+            model.addAttribute("eventRegistrationJson", "[]");
+            model.addAttribute("recordStatsJson", "[]");
+            model.addAttribute("topAthletesData", Collections.emptyList());
+        }
         
         return "result/statistics";
     }
