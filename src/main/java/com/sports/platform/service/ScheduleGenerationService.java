@@ -366,11 +366,13 @@ public class ScheduleGenerationService {
         int conflicts = 0;
 
         // 1. 运动员休息时间不足检查
-        List<LocalTime> athleteTimes = athleteSchedules.getOrDefault(sportTypeId, new ArrayList<>());
-        for (LocalTime prevEnd : athleteTimes) {
-            long hoursBetween = Duration.between(prevEnd, timeSlot[0]).toHours();
-            if (hoursBetween >= 0 && hoursBetween < 2) {
-                conflicts += 3; // 休息不足惩罚
+        if (athleteSchedules != null) {
+            List<LocalTime> athleteTimes = athleteSchedules.getOrDefault(sportTypeId, new ArrayList<>());
+            for (LocalTime prevEnd : athleteTimes) {
+                long hoursBetween = Duration.between(prevEnd, timeSlot[0]).toHours();
+                if (hoursBetween >= 0 && hoursBetween < 2) {
+                    conflicts += 3; // 休息不足惩罚
+                }
             }
         }
 
