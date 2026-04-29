@@ -16,15 +16,19 @@
                 <form th:action="@{/athletes}" method="get" class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">姓名</label>
-                        <input type="text" class="form-control" name="name" th:value="${param.name}" placeholder="输入姓名">
+                        <input type="text" class="form-control" name="name" th:value="${param.name}" placeholder="输入运动员姓名">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">国家/地区</label>
+                        <label class="form-label">国家</label>
                         <input type="text" class="form-control" name="country" th:value="${param.country}" placeholder="输入国家">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">项目</label>
-                        <input type="text" class="form-control" name="sportType" th:value="${param.sportType}" placeholder="输入项目">
+                        <label class="form-label">性别</label>
+                        <select class="form-select" name="gender">
+                            <option value="">全部</option>
+                            <option value="MALE" th:selected="${param.gender == 'MALE'}">男</option>
+                            <option value="FEMALE" th:selected="${param.gender == 'FEMALE'}">女</option>
+                        </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">
@@ -37,7 +41,7 @@
 
         <!-- 操作按钮 -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">共 <span th:text="${athletes.size()}">0</span> 名运动员</h5>
+            <h5 class="mb-0">共 <span th:text="${athletes.size()}">0</span> 条记录</h5>
             <a th:href="@{/athletes/new}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>添加运动员
             </a>
@@ -53,8 +57,8 @@
                                 <th>ID</th>
                                 <th>姓名</th>
                                 <th>性别</th>
-                                <th>年龄</th>
                                 <th>国家</th>
+                                <th>出生日期</th>
                                 <th>运动项目</th>
                                 <th>最好成绩</th>
                                 <th class="text-center">操作</th>
@@ -65,17 +69,26 @@
                                 <td th:text="${athlete.id}">1</td>
                                 <td th:text="${athlete.name}">运动员姓名</td>
                                 <td th:text="${athlete.gender == 'MALE' ? '男' : '女'}">男</td>
-                                <td th:text="${athlete.age}">25</td>
                                 <td th:text="${athlete.country}">中国</td>
-                                <td th:text="${athlete.sportType}">田径</td>
-                                <td th:text="${athlete.bestRecord ?: '-'}">10.5秒</td>
+                                <td th:text="${#temporals.format(athlete.dateOfBirth, 'yyyy-MM-dd')}">2000-01-01</td>
+                                <td th:text="${athlete.sportType?.name}">田径</td>
+                                <td th:text="${athlete.bestPerformance ?: '-'}">10.5s</td>
                                 <td class="text-center">
-                                    <a th:href="@{/athletes/{id}(id=${athlete.id})}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a th:href="@{/athletes/{id}/edit(id=${athlete.id})}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/athletes/{id}(id=${athlete.id})}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/athletes/{id}/edit(id=${athlete.id})}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form th:action="@{/athletes/{id}/delete(id=${athlete.id})}" method="post" style="display:inline;"
+                                              onsubmit="return confirm('确定删除该运动员吗？');">
+                                            <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(athletes)}">

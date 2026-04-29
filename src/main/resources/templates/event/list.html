@@ -79,17 +79,26 @@
                                 <td>
                                     <span class="badge"
                                           th:classappend="${event.status == 'PUBLISHED' ? 'bg-success' : 
-                                                           event.status == 'DRAFT' ? 'bg-secondary' : 
+                                                           event.status == 'DRAFT' ? 'bg-secondary' :
                                                            event.status == 'COMPLETED' ? 'bg-primary' : 'bg-danger'}"
                                           th:text="${event.status}">状态</span>
                                 </td>
                                 <td class="text-center">
-                                    <a th:href="@{/events/{id}(id=${event.id})}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a th:href="@{/events/{id}/edit(id=${event.id})}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/events/{id}(id=${event.id})}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/events/{id}/edit(id=${event.id})}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form th:action="@{/events/{id}/delete(id=${event.id})}" method="post" style="display:inline;"
+                                              onsubmit="return confirm('确定删除该赛事吗？');">
+                                            <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(events)}">
