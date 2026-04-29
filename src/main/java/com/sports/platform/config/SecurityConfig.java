@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/results/statistics").hasAnyRole("ADMIN", "REFEREE")
                         // 管理员审核报名
                         .requestMatchers("/admin/registrations/**").hasAnyRole("ADMIN", "REFEREE")
+                        // 场地管理 - 管理员
+                        .requestMatchers("/venues/create", "/venues/*/edit", "/venues/*/delete").hasRole("ADMIN")
 
                         // 其余请求都要登录
                         .anyRequest().authenticated()

@@ -5,10 +5,9 @@
       layout:decorate="~{layout/main}">
 <head>
     <title>仪表盘</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div layout:fragment="page-title">仪表盘</div>
-
     <div layout:fragment="content">
         <!-- 欢迎信息 -->
         <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -36,7 +35,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">总赛事数</h6>
-                                <h3 class="mb-0" id="statEvents">-</h3>
+                                <h3 class="mb-0" th:text="${stats.totalEvents}">0</h3>
                             </div>
                         </div>
                     </div>
@@ -53,7 +52,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">注册运动员</h6>
-                                <h3 class="mb-0" id="statAthletes">-</h3>
+                                <h3 class="mb-0" th:text="${stats.totalAthletes}">0</h3>
                             </div>
                         </div>
                     </div>
@@ -70,7 +69,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">总赛程数</h6>
-                                <h3 class="mb-0" id="statSchedules">-</h3>
+                                <h3 class="mb-0" th:text="${stats.totalSchedules}">0</h3>
                             </div>
                         </div>
                     </div>
@@ -87,7 +86,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">有效成绩数</h6>
-                                <h3 class="mb-0" id="statResults">-</h3>
+                                <h3 class="mb-0" th:text="${stats.totalResults}">0</h3>
                             </div>
                         </div>
                     </div>
@@ -103,12 +102,7 @@
                         <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>赛事状态分布</h5>
                     </div>
                     <div class="card-body">
-                        <div id="eventChart" style="height: 250px;">
-                            <div class="text-center text-muted py-5">
-                                <i class="bi bi-pie-chart fs-1"></i>
-                                <p class="mt-2 mb-0">暂无数据</p>
-                            </div>
-                        </div>
+                        <canvas id="eventStatusChart" height="250"></canvas>
                     </div>
                 </div>
             </div>
@@ -118,10 +112,60 @@
                         <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>运动员年龄段分布</h5>
                     </div>
                     <div class="card-body">
-                        <div id="athleteAgeChart" style="height: 250px;">
-                            <div class="text-center text-muted py-5">
-                                <i class="bi bi-bar-chart fs-1"></i>
-                                <p class="mt-2 mb-0">暂无数据</p>
+                        <canvas id="athleteAgeChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 进行中赛事 + 待审核 -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-play-circle me-2"></i>进行中赛事</h5>
+                        <a th:href="@{/events}" class="btn btn-sm btn-outline-primary">查看全部</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item" th:each="event : ${ongoingEvents}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" th:text="${event.name}">赛事名称</h6>
+                                        <small class="text-muted" th:text="${event.startDate} + ' ~ ' + ${event.endDate}">日期</small>
+                                    </div>
+                                    <span class="badge bg-success">进行中</span>
+                                </div>
+                            </div>
+                            <div class="list-group-item text-center text-muted" th:if="${ongoingEvents.isEmpty()}">
+                                暂无进行中的赛事
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>待办事项</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center" sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
+                                <span>待审核报名</span>
+                                <span class="badge bg-warning rounded-pill" th:text="${stats.pendingRegistrations}">0</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center" sec:authorize="hasRole('ADMIN')">
+                                <span>待审核角色申请</span>
+                                <span class="badge bg-danger rounded-pill" th:text="${pendingCount}">0</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>进行中赛事</span>
+                                <span class="badge bg-success rounded-pill" th:text="${stats.ongoingEventsCount}">0</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>报名中赛事</span>
+                                <span class="badge bg-info rounded-pill" th:text="${#lists.size(registrationEvents)}">0</span>
                             </div>
                         </div>
                     </div>
@@ -136,27 +180,39 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <a th:href="@{/events}" class="btn btn-outline-primary w-100 py-3">
-                            <i class="bi bi-calendar-event fs-3 d-block mb-2"></i>
+                            <i class="bi bi-calendar-event fs-4 d-block mb-2"></i>
                             赛事管理
                         </a>
                     </div>
-                    <div class="col-md-3" sec:authorize="hasRole('ADMIN')">
+                    <div class="col-md-2" sec:authorize="hasRole('ADMIN')">
                         <a th:href="@{/athletes}" class="btn btn-outline-success w-100 py-3">
-                            <i class="bi bi-person-badge fs-3 d-block mb-2"></i>
+                            <i class="bi bi-person-badge fs-4 d-block mb-2"></i>
                             运动员管理
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/venues}" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="bi bi-building fs-4 d-block mb-2"></i>
+                            场地管理
+                        </a>
+                    </div>
+                    <div class="col-md-2">
                         <a th:href="@{/schedule-generation}" class="btn btn-success w-100 py-3">
-                            <i class="bi bi-magic fs-3 d-block mb-2"></i>
+                            <i class="bi bi-magic fs-4 d-block mb-2"></i>
                             智能编排
                         </a>
                     </div>
-                    <div class="col-md-3">
-                        <a th:href="@{/statistics}" class="btn btn-outline-info w-100 py-3">
-                            <i class="bi bi-graph-up fs-3 d-block mb-2"></i>
+                    <div class="col-md-2">
+                        <a th:href="@{/results}" class="btn btn-outline-info w-100 py-3">
+                            <i class="bi bi-graph-up fs-4 d-block mb-2"></i>
+                            成绩管理
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a th:href="@{/results/statistics}" class="btn btn-outline-warning w-100 py-3">
+                            <i class="bi bi-bar-chart fs-4 d-block mb-2"></i>
                             数据统计
                         </a>
                     </div>
@@ -165,68 +221,71 @@
         </div>
     </div>
 
-    <th:block layout:fragment="scripts-extra">
-    <script>
+    <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        loadStatistics();
+        // 赛事状态分布图
+        const eventStatusData = /*[[${eventStatusData}]]*/ [];
+        if (eventStatusData && eventStatusData.length > 0) {
+            const statusLabels = eventStatusData.map(item => {
+                const nameMap = {
+                    'DRAFT': '草稿', 'REGISTRATION': '报名中', 'ONGOING': '进行中',
+                    'FINISHED': '已结束', 'CANCELLED': '已取消'
+                };
+                return nameMap[item.status] || item.status;
+            });
+            const statusValues = eventStatusData.map(item => item.count);
+            const statusColors = ['#6c757d', '#0dcaf0', '#198754', '#0d6efd', '#dc3545'];
 
-        function loadStatistics() {
-            fetch('/api/dashboard/statistics')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('statEvents').textContent = data.totalEvents || 0;
-                    document.getElementById('statAthletes').textContent = data.totalAthletes || 0;
-                    document.getElementById('statSchedules').textContent = data.totalSchedules || 0;
-                    document.getElementById('statResults').textContent = data.totalResults || 0;
-
-                    renderEventChart(data.eventStatusDistribution);
-                    renderAthleteAgeChart(data.athleteAgeDistribution);
-                })
-                .catch(error => {
-                    console.error('加载统计失败:', error);
-                });
+            new Chart(document.getElementById('eventStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues,
+                        backgroundColor: statusColors,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
         }
 
-        function renderEventChart(distribution) {
-            const container = document.getElementById('eventChart');
-            if (!distribution || distribution.length === 0) return;
+        // 运动员年龄段分布图
+        const athleteAgeData = /*[[${athleteByAgeGroup}]]*/ [];
+        if (athleteAgeData && athleteAgeData.length > 0) {
+            const ageLabels = athleteAgeData.map(item => item.ageGroup);
+            const ageValues = athleteAgeData.map(item => item.count);
 
-            let html = '<div class="row">';
-            distribution.forEach(item => {
-                const colors = {'PUBLISHED': 'bg-success', 'DRAFT': 'bg-secondary', 'CANCELLED': 'bg-danger', 'COMPLETED': 'bg-primary'};
-                html += `
-                    <div class="col-6 mb-3">
-                        <div class="d-flex align-items-center">
-                            <span class="badge ${colors[item.status] || 'bg-secondary'} me-2">${item.status}</span>
-                            <strong>${item.count}</strong>
-                        </div>
-                    </div>
-                `;
+            new Chart(document.getElementById('athleteAgeChart'), {
+                type: 'bar',
+                data: {
+                    labels: ageLabels,
+                    datasets: [{
+                        label: '运动员数量',
+                        data: ageValues,
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
             });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function renderAthleteAgeChart(distribution) {
-            const container = document.getElementById('athleteAgeChart');
-            if (!distribution || distribution.length === 0) return;
-
-            let html = '<div class="row">';
-            distribution.forEach(item => {
-                html += `
-                    <div class="col-6 mb-3">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-info me-2">${item.ageGroup}</span>
-                            <strong>${item.count}人</strong>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            container.innerHTML = html;
         }
     });
     </script>
-    </th:block>
 </body>
 </html>

@@ -82,3 +82,11 @@ INSERT IGNORE INTO sport_type (id, name, code, description, category, is_individ
 (4, 'Table Tennis', 'table_tennis', 'Table tennis game', 'Ball Sports', TRUE, TRUE, NOW()),
 (5, 'Swimming', 'swimming', 'Swimming competition', 'Water Sports', TRUE, TRUE, NOW()),
 (6, 'Track and Field', 'track_field', 'Track and field competition', 'Athletics', TRUE, TRUE, NOW());
+
+-- 插入场地数据
+INSERT IGNORE INTO venue (id, name, location, description, type, capacity, max_concurrent_events, facilities, contact_person, contact_phone, enabled, created_time) VALUES
+(1, '主体育场', 'A区1号', '标准400米田径场，可举办田径赛事', 'TRACK', 5000, 3, '跑道、跳高区、跳远区、投掷区', '张主任', '13800000001', TRUE, NOW()),
+(2, '综合体育馆', 'B区2号', '室内综合体育馆，可举办篮球、羽毛球等', 'GYM', 3000, 2, '篮球场、羽毛球场、乒乓球区', '李主任', '13800000002', TRUE, NOW()),
+(3, '游泳馆', 'C区3号', '标准50米泳池', 'POOL', 1500, 2, '50米标准泳池、热身池、观众席', '王主任', '13800000003', TRUE, NOW()),
+(4, '足球场', 'D区4号', '标准11人制足球场', 'FIELD', 4000, 1, '标准草坪、灯光系统、观众席', '赵主任', '13800000004', TRUE, NOW()),
+(5, '网球中心', 'E区5号', '室外网球中心', 'COURT', 800, 4, '4块标准场地、灯光系统', '陈主任', '13800000005', TRUE, NOW());

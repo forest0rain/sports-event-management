@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>场地详情</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">场地详情</h4>
+        <a th:href="@{/venues}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0" th:text="${venue.name}">场地名称</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="text-end" style="width: 30%">场地类型：</th>
+                            <td><span class="badge bg-info" th:text="${venue.type}">类型</span></td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">位置：</th>
+                            <td th:text="${venue.location}">位置</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">容量：</th>
+                            <td th:text="${venue.capacity} + ' 人'">100 人</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">最大同时赛事数：</th>
+                            <td th:text="${venue.maxConcurrentEvents}">1</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">设施描述：</th>
+                            <td th:text="${venue.facilities}">设施</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">描述：</th>
+                            <td th:text="${venue.description}">描述</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">联系人：</th>
+                            <td th:text="${venue.contactPerson}">联系人</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">联系电话：</th>
+                            <td th:text="${venue.contactPhone}">电话</td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">状态：</th>
+                            <td>
+                                <span th:if="${venue.enabled}" class="badge bg-success">启用</span>
+                                <span th:unless="${venue.enabled}" class="badge bg-secondary">禁用</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-end">创建时间：</th>
+                            <td th:text="${#temporals.format(venue.createdTime, 'yyyy-MM-dd HH:mm')}">时间</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="btn-group" sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/venues/{id}/edit(id=${venue.id})}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i>编辑
+                </a>
+                <form th:action="@{/venues/{id}/toggle(id=${venue.id})}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi me-1" th:classappend="${venue.enabled} ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+                        <span th:text="${venue.enabled} ? '禁用' : '启用'">切换状态</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
