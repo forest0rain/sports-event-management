@@ -61,13 +61,7 @@
 <body>
     <!-- 隐藏的数据容器，用于传递后端数据到JS -->
     <div id="statistics-data" style="display:none;"
-         data-event-status th:attr="data-event-status=${eventStatusJson}"
-         data-gender th:attr="data-gender=${athleteGenderJson}"
-         data-age th:attr="data-age=${athleteAgeJson}"
-         data-result-status th:attr="data-result-status=${resultStatusJson}"
-         data-monthly th:attr="data-monthly=${monthlyTrendJson}"
-         data-event-reg th:attr="data-event-reg=${eventRegistrationJson}"
-         data-record th:attr="data-record=${recordStatsJson}">
+         th:attr="data-event-status=${eventStatusJson},data-gender=${athleteGenderJson},data-age=${athleteAgeJson},data-result-status=${resultStatusJson},data-monthly=${monthlyTrendJson},data-event-reg=${eventRegistrationJson},data-record=${recordStatsJson}">
     </div>
 
     <div layout:fragment="content">
