@@ -206,9 +206,12 @@ public class ScheduleGenerationService {
             }
 
             // 如果找到次优槽位（非零冲突），添加到结果
-            if (bestSlot != null && optimizedSchedules.stream().noneMatch(s -> s.getScheduleId().equals(bestSlot.getScheduleId()))) {
-                optimizedSchedules.add(bestSlot);
-                conflicts += minConflicts;
+            if (bestSlot != null) {
+                final OptimizedScheduleSlot finalBestSlot = bestSlot;
+                if (optimizedSchedules.stream().noneMatch(s -> s.getScheduleId().equals(finalBestSlot.getScheduleId()))) {
+                    optimizedSchedules.add(finalBestSlot);
+                    conflicts += minConflicts;
+                }
             }
         }
 
