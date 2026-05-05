@@ -30,7 +30,7 @@ spring:
   
   sql:
     init:
-      mode: always
+      mode: never  # 改为 never，禁止初始化数据
       schema-locations: classpath:db/schema.sql
       data-locations: classpath:data.sql
   
