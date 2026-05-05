@@ -102,4 +102,14 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
      */
     @Query("SELECT r FROM Result r WHERE r.schedule.event.id = :eventId AND r.status = 'CONFIRMED' ORDER BY r.sportType.name, r.rank ASC")
     List<Result> findConfirmedByEventId(@Param("eventId") Long eventId);
+    /**
+     * 根据成绩状态查询（兼容调用方命名）
+     */
+    @Query("SELECT r FROM Result r WHERE r.status = :status")
+    List<Result> findByResultStatus(@Param("status") String status);
+
+
+
+
+
 }

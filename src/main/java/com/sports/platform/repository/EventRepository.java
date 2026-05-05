@@ -25,7 +25,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     /**
      * 查询非草稿状态的赛事（公开浏览）
      */
-    Page<Event> findByStatusNot(Event.EventStatus status, Pageable pageable);
+    Page<Event> findByStatusNot(String status, Pageable pageable);
 
     /**
      * 查询公开赛事
