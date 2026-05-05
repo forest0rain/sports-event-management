@@ -18,26 +18,40 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <form th:action="@{/athletes}" method="get" class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">姓名</label>
-                        <input type="text" class="form-control" name="name" th:value="${param.name}" placeholder="输入运动员姓名">
-                    </div>
                     <div class="col-md-3">
-                        <label class="form-label">国家</label>
-                        <input type="text" class="form-control" name="keyword" th:value="${keyword}" placeholder="输入运动员姓名或单位">
+                        <label class="form-label">关键词</label>
+                        <input type="text" class="form-control" name="keyword" th:value="${keyword}" placeholder="姓名或单位">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">性别</label>
                         <select class="form-select" name="gender">
                             <option value="">全部</option>
-                            <option value="MALE" th:selected="${param.gender == 'MALE'}">男</option>
-                            <option value="FEMALE" th:selected="${param.gender == 'FEMALE'}">女</option>
+                            <option value="M" th:selected="${gender == 'M'}">男</option>
+                            <option value="F" th:selected="${gender == 'F'}">女</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                    <div class="col-md-2">
+                        <label class="form-label">年龄组</label>
+                        <select class="form-select" name="ageGroup">
+                            <option value="">全部</option>
+                            <option value="U18" th:selected="${ageGroup == 'U18'}">U18</option>
+                            <option value="U20" th:selected="${ageGroup == 'U20'}">U20</option>
+                            <option value="U23" th:selected="${ageGroup == 'U23'}">U23</option>
+                            <option value="OPEN" th:selected="${ageGroup == 'OPEN'}">OPEN</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">特长</label>
+                        <select class="form-select" name="specialty">
+                            <option value="">全部</option>
+                            <option th:each="s : ${specialtyList}" th:value="${s}" th:text="${s}" th:selected="${specialty == s}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">
                             <i class="bi bi-search me-1"></i>搜索
                         </button>
+                        <a th:href="@{/athletes}" class="btn btn-outline-secondary">重置</a>
                     </div>
                 </form>
             </div>

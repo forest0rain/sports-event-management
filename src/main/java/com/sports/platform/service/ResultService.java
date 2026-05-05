@@ -57,7 +57,7 @@ public class ResultService {
         Registration registration = registrationRepository.findByEventIdAndAthleteId(
                 schedule.getEvent().getId(), athleteId).orElse(null);
 
-        // 创建成绩记录
+        // 创建成绩记录（默认审核状态为PENDING）
         Result result = Result.builder()
                 .schedule(schedule)
                 .athlete(athlete)
@@ -66,6 +66,7 @@ public class ResultService {
                 .score(score)
                 .scoreText(scoreText)
                 .status(status)
+                .reviewStatus("PENDING")
                 .remark(remark)
                 .referee(referee)
                 .recordTime(LocalDateTime.now())
@@ -163,8 +164,9 @@ public class ResultService {
                 athlete.getId(), sportType.getId());
 
         if (bestResults.isEmpty()) {
-            // 首次参赛，即为个人最佳
+            // 首次参赛，即为个人最佳和赛季最佳
             result.setIsPersonalBest(true);
+            result.setIsSeasonBest(true);
         } else {
             Result previousBest = bestResults.get(0);
             
@@ -183,8 +185,36 @@ public class ResultService {
             }
         }
 
-        // TODO: 检查是否破纪录(需要维护纪录表)
-        // 这里简化处理，可以根据实际情况扩展
+        // 检查赛季最佳(SB): 该运动员此项目本年度的最佳成绩
+        int currentYear = java.time.LocalDate.now().getYear();
+        List<Result> seasonBestResults = resultRepository.findSeasonBestByAthleteAndSport(
+                athlete.getId(), sportType.getId(), currentYear);
+        
+        if (seasonBestResults.isEmpty()) {
+            result.setIsSeasonBest(true);
+        } else {
+            Result previousSeasonBest = seasonBestResults.get(0);
+            boolean isSeasonBetter;
+            if (sportType.getIsTimed()) {
+                isSeasonBetter = result.getScore().compareTo(previousSeasonBest.getScore()) < 0;
+            } else {
+                isSeasonBetter = result.getScore().compareTo(previousSeasonBest.getScore()) > 0;
+            }
+            if (isSeasonBetter) {
+                result.setIsSeasonBest(true);
+            }
+        }
+
+        // 设置破纪录类型
+        if (Boolean.TRUE.equals(result.getIsPersonalBest()) && Boolean.TRUE.equals(result.getIsSeasonBest())) {
+            result.setRecordType("PB+SB");
+        } else if (Boolean.TRUE.equals(result.getIsPersonalBest())) {
+            result.setRecordType("PB");
+        } else if (Boolean.TRUE.equals(result.getIsSeasonBest())) {
+            result.setRecordType("SB");
+        } else {
+            result.setRecordType("无");
+        }
     }
 
     /**
@@ -277,6 +307,38 @@ public class ResultService {
         // TODO: 更多统计数据
         
         return stats;
+    }
+
+    /**
+     * 审核成绩（确认）
+     */
+    @Transactional
+    public Result confirmResult(Long id) {
+        Result result = getResultById(id);
+        result.setStatus("CONFIRMED");
+        result = resultRepository.save(result);
+        log.info("成绩审核通过: ID={}, 运动员={}", id, result.getAthlete().getName());
+        return result;
+    }
+
+    /**
+     * 审核成绩（拒绝）
+     */
+    @Transactional
+    public Result rejectResult(Long id, String reason) {
+        Result result = getResultById(id);
+        result.setStatus("REJECTED");
+        result.setRemark(reason);
+        result = resultRepository.save(result);
+        log.info("成绩审核拒绝: ID={}, 运动员={}, 原因={}", id, result.getAthlete().getName(), reason);
+        return result;
+    }
+
+    /**
+     * 获取待审核成绩列表
+     */
+    public List<Result> getPendingResults() {
+        return resultRepository.findByStatus("PENDING");
     }
 
     /**

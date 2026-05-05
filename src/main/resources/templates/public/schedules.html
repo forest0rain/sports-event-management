@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>赛程安排 - 公开浏览</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">
+                <i class="bi bi-calendar-event text-primary me-2"></i>赛程安排
+            </h4>
+            <span class="badge bg-info">公开浏览</span>
+        </div>
+
+        <div th:if="${schedules.totalElements == 0}" class="text-center text-muted py-5">
+            <i class="bi bi-calendar-x fs-1"></i>
+            <p class="mt-2">暂无赛程安排</p>
+        </div>
+
+        <div class="table-responsive" th:if="${schedules.totalElements > 0}">
+            <table class="table table-hover">
+                <thead class="table-light">
+                <tr>
+                    <th>日期</th>
+                    <th>时间</th>
+                    <th>赛事</th>
+                    <th>项目</th>
+                    <th>场地</th>
+                    <th>轮次</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${schedules}">
+                    <td th:text="${#temporals.format(s.scheduleDate, 'yyyy-MM-dd')}">日期</td>
+                    <td>
+                        <span th:text="${s.startTime}"></span>
+                        <span th:if="${s.endTime}"> - </span>
+                        <span th:text="${s.endTime}"></span>
+                    </td>
+                    <td th:text="${s.event?.name}">赛事</td>
+                    <td th:text="${s.sportType?.name}">项目</td>
+                    <td th:text="${s.venue?.name} ?: '待定'">场地</td>
+                    <td th:text="${s.round}">轮次</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        <nav th:if="${schedules.totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${schedules.number == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/public/schedules(page=${schedules.number - 1})}">上一页</a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, schedules.totalPages - 1)}"
+                    th:classappend="${i == schedules.number} ? 'active'">
+                    <a class="page-link" th:href="@{/public/schedules(page=${i})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${schedules.number == schedules.totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/public/schedules(page=${schedules.number + 1})}">下一页</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

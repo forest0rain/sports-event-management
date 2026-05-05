@@ -26,8 +26,14 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/webjars/**",
-                                "/error"
+                                "/error",
+                                "/public/**"
                         ).permitAll()
+
+                        // 公开页面 - 观众无需注册即可浏览
+                        .requestMatchers("/events", "/events/").permitAll()
+                        .requestMatchers("/schedules", "/schedules/").permitAll()
+                        .requestMatchers("/results", "/results/").permitAll()
 
                         // 只有管理员能看上传文件
                         .requestMatchers("/files/**").hasRole("ADMIN")

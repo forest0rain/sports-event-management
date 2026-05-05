@@ -55,6 +55,20 @@ public interface AthleteRepository extends JpaRepository<Athlete, Long> {
     List<Athlete> findBySpecialty(@Param("specialty") String specialty);
 
     /**
+     * 多维检索运动员（关键词+性别+年龄组+特长）
+     */
+    @Query("SELECT a FROM Athlete a WHERE " +
+           "(:keyword IS NULL OR :keyword = '' OR a.name LIKE %:keyword% OR a.organization LIKE %:keyword%) AND " +
+           "(:gender IS NULL OR :gender = '' OR a.gender = :gender) AND " +
+           "(:ageGroup IS NULL OR :ageGroup = '' OR a.ageGroup = :ageGroup) AND " +
+           "(:specialty IS NULL OR :specialty = '' OR a.specialty LIKE %:specialty%)")
+    Page<Athlete> multiSearch(@Param("keyword") String keyword,
+                              @Param("gender") String gender,
+                              @Param("ageGroup") String ageGroup,
+                              @Param("specialty") String specialty,
+                              Pageable pageable);
+
+    /**
      * 统计各年龄段运动员数量
      */
     @Query("SELECT a.ageGroup, COUNT(a) FROM Athlete a GROUP BY a.ageGroup")

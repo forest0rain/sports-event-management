@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/main}">
+<head>
+    <title>待审核成绩</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <h3>待审核成绩</h3>
+    </div>
+
+    <div th:if="${results == null or results.isEmpty()}" class="text-center text-muted py-5">
+        <i class="bi bi-check-circle" style="font-size: 3rem;"></i>
+        <p class="mt-2">暂无待审核成绩</p>
+    </div>
+
+    <div th:if="${results != null and !results.isEmpty()}">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>赛事</th>
+                            <th>项目</th>
+                            <th>运动员</th>
+                            <th>成绩</th>
+                            <th>录入时间</th>
+                            <th>裁判</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="result : ${results}">
+                            <td th:text="${result.schedule?.event?.name}"></td>
+                            <td th:text="${result.sportType?.name}"></td>
+                            <td th:text="${result.athlete?.name}"></td>
+                            <td>
+                                <span th:text="${result.scoreText}"></span>
+                                <span th:if="${result.rankPosition}" class="badge bg-info ms-1" th:text="'第' + ${result.rankPosition} + '名'"></span>
+                            </td>
+                            <td th:text="${#temporals.format(result.recordTime, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${result.referee?.name}"></td>
+                            <td>
+                                <form th:action="@{/results/{id}/confirm(id=${result.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确认此成绩？')">确认</button>
+                                </form>
+                                <button type="button" class="btn btn-danger btn-sm" 
+                                        th:data-id="${result.id}"
+                                        onclick="showRejectModal(this.getAttribute('data-id'))">拒绝</button>
+                                <a th:href="@{/results/{id}(id=${result.id})}" class="btn btn-outline-secondary btn-sm">详情</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 拒绝原因弹窗 -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="rejectForm" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">拒绝成绩</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">拒绝原因</label>
+                            <textarea name="rejectReason" class="form-control" rows="3" placeholder="请输入拒绝原因..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-danger">确认拒绝</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scripts-extra">
+    <script>
+        function showRejectModal(resultId) {
+            document.getElementById('rejectForm').action = '/results/' + resultId + '/reject';
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+    </script>
+</div>
+</body>
+</html>

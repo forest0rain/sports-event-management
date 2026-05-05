@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>赛事信息 - 公开浏览</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">
+                <i class="bi bi-trophy text-primary me-2"></i>赛事信息
+            </h4>
+            <span class="badge bg-info">公开浏览</span>
+        </div>
+
+        <div th:if="${events.totalElements == 0}" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1"></i>
+            <p class="mt-2">暂无公开赛事信息</p>
+        </div>
+
+        <div class="row g-4" th:if="${events.totalElements > 0}">
+            <div class="col-md-6 col-lg-4" th:each="event : ${events}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0" th:text="${event.name}">赛事名称</h6>
+                            <span class="badge"
+                                  th:classappend="${event.status == T(com.sports.platform.entity.Event.EventStatus).REGISTRATION} ? 'bg-primary' : (${event.status == T(com.sports.platform.entity.Event.EventStatus).ONGOING} ? 'bg-success' : (${event.status == T(com.sports.platform.entity.Event.EventStatus).FINISHED} ? 'bg-secondary' : 'bg-info'))"
+                                  th:text="${event.status}">状态</span>
+                        </div>
+                        <p class="card-text text-muted small mb-1">
+                            <i class="bi bi-calendar me-1"></i>
+                            <span th:text="${#temporals.format(event.startDate, 'yyyy-MM-dd')}"></span>
+                            ~
+                            <span th:text="${#temporals.format(event.endDate, 'yyyy-MM-dd')}"></span>
+                        </p>
+                        <p class="card-text text-muted small mb-1" th:if="${event.location}">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            <span th:text="${event.location}">地点</span>
+                        </p>
+                        <p class="card-text text-muted small mb-1" th:if="${event.maxParticipants}">
+                            <i class="bi bi-people me-1"></i>
+                            最多 <span th:text="${event.maxParticipants}">0</span> 人参赛
+                        </p>
+                        <p class="card-text small mt-2" th:if="${event.description}" th:text="${#strings.abbreviate(event.description, 80)}">描述</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <nav th:if="${events.totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${events.number == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/public/events(page=${events.number - 1})}">上一页</a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, events.totalPages - 1)}"
+                    th:classappend="${i == events.number} ? 'active'">
+                    <a class="page-link" th:href="@{/public/events(page=${i})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${events.number == events.totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/public/events(page=${events.number + 1})}">下一页</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>
