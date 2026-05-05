@@ -78,8 +78,12 @@ public class DashboardController {
             Map<String, Object> chartData = new HashMap<>();
             chartData.put("eventStatus", toListOfLists(eventRepository.countByStatus()));
             chartData.put("athleteAge", toListOfLists(athleteRepository.countByAgeGroup()));
-            model.addAttribute("chartDataJson", objectMapper.writeValueAsString(chartData));
+            String json = objectMapper.writeValueAsString(chartData);
+            System.out.println("[Dashboard] chartDataJson = " + json);
+            model.addAttribute("chartDataJson", json);
         } catch (Exception e) {
+            System.err.println("[Dashboard] Error serializing chart data: " + e.getMessage());
+            e.printStackTrace();
             model.addAttribute("chartDataJson", "{}");
         }
         

@@ -1,6 +1,7 @@
 package com.sports.platform.config;
 
 import com.sports.platform.util.DateTimeFormatUtil;
+import com.sports.platform.util.DesensitizationUtil;
 import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,15 @@ public class ThymeleafConfig implements WebMvcConfigurer {
     @Bean
     public DateTimeFormatUtil dateTimeFormatUtil() {
         return new DateTimeFormatUtil();
+    }
+
+    /**
+     * 数据脱敏工具类 - 用于 Thymeleaf 模板
+     * 在模板中使用: ${@desensitizationUtil.maskPhone(athlete.phone)}
+     */
+    @Bean
+    public DesensitizationUtil desensitizationUtil() {
+        return new DesensitizationUtil();
     }
 
     /**

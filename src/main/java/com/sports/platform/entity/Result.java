@@ -90,6 +90,20 @@ public class Result {
     @Builder.Default
     private String status = "VALID";
 
+    // 审核状态: PENDING(待审核), CONFIRMED(已确认), REJECTED(已拒绝)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String reviewStatus = "PENDING";
+
+    /**
+     * 审核状态枚举
+     */
+    public enum ReviewStatus {
+        PENDING,    // 待审核
+        CONFIRMED,  // 已确认
+        REJECTED    // 已拒绝
+    }
+
     // 备注
     @Column(length = 500)
     private String remark;

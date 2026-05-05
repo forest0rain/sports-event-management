@@ -260,6 +260,13 @@ public class AthleteService {
     }
 
     /**
+     * 多维检索运动员
+     */
+    public Page<Athlete> multiSearchAthletes(String keyword, String gender, String ageGroup, String specialty, Pageable pageable) {
+        return athleteRepository.multiSearch(keyword, gender, ageGroup, specialty, pageable);
+    }
+
+    /**
      * 根据性别查询
      */
     public List<Athlete> getAthletesByGender(String gender) {

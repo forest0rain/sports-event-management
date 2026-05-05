@@ -159,23 +159,23 @@ INSERT IGNORE INTO registration (id, athlete_id, event_id, sport_type_id, status
 (20, 3, 4, 2, 'APPROVED', NOW());
 
 -- 插入成绩数据
-INSERT IGNORE INTO result (id, schedule_id, athlete_id, sport_type_id, score_text, rank, record_type, is_personal_best, is_season_best, status, result_type, created_time) VALUES
-(1, 1, 1, 6, '10.85秒', 1, '校纪录', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(2, 1, 7, 6, '11.02秒', 2, '无', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(3, 1, 11, 6, '11.35秒', 3, '无', TRUE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(4, 1, 15, 6, '11.48秒', 4, '无', FALSE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(5, 4, 2, 5, '58.23秒', 1, '市纪录', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(6, 4, 8, 5, '59.15秒', 2, '无', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(7, 4, 18, 5, '1:00.45', 3, '无', FALSE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(8, 3, 3, 1, '24分', 1, '无', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(9, 3, 9, 1, '22分', 2, '无', TRUE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(10, 6, 4, 3, '21-18', 1, '无', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(11, 6, 10, 3, '18-21', 2, '无', FALSE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(12, 5, 5, 2, '3-1', 1, '校纪录', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(13, 5, 13, 2, '2-3', 2, '无', FALSE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(14, 7, 6, 4, '3-0', 1, '无', TRUE, TRUE, 'VALID', 'PRELIMINARY', NOW()),
-(15, 7, 14, 4, '2-3', 2, '无', TRUE, FALSE, 'VALID', 'PRELIMINARY', NOW()),
-(16, 2, 1, 6, '22.15秒', 1, '省纪录', TRUE, TRUE, 'VALID', 'FINAL', NOW()),
-(17, 2, 7, 6, '23.01秒', 2, '无', FALSE, FALSE, 'VALID', 'FINAL', NOW()),
+INSERT IGNORE INTO result (id, schedule_id, athlete_id, sport_type_id, score_text, rank_position, record_type, is_personal_best, is_season_best, status, review_status, result_type, record_time) VALUES
+(1, 1, 1, 6, '10.85秒', 1, 'SCHOOL_RECORD', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(2, 1, 7, 6, '11.02秒', 2, 'NONE', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(3, 1, 11, 6, '11.35秒', 3, 'NONE', TRUE, FALSE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(4, 1, 15, 6, '11.48秒', 4, 'NONE', FALSE, FALSE, 'VALID', 'PENDING', 'PRELIMINARY', NOW()),
+(5, 4, 2, 5, '58.23秒', 1, 'CITY_RECORD', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(6, 4, 8, 5, '59.15秒', 2, 'NONE', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(7, 4, 18, 5, '1:00.45', 3, 'NONE', FALSE, FALSE, 'VALID', 'PENDING', 'PRELIMINARY', NOW()),
+(8, 3, 3, 1, '24分', 1, 'NONE', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(9, 3, 9, 1, '22分', 2, 'NONE', TRUE, FALSE, 'VALID', 'PENDING', 'PRELIMINARY', NOW()),
+(10, 6, 4, 3, '21-18', 1, 'NONE', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(11, 6, 10, 3, '18-21', 2, 'NONE', FALSE, FALSE, 'VALID', 'PENDING', 'PRELIMINARY', NOW()),
+(12, 5, 5, 2, '3-1', 1, 'SCHOOL_RECORD', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(13, 5, 13, 2, '2-3', 2, 'NONE', FALSE, FALSE, 'VALID', 'PENDING', 'PRELIMINARY', NOW()),
+(14, 7, 6, 4, '3-0', 1, 'NONE', TRUE, TRUE, 'VALID', 'CONFIRMED', 'PRELIMINARY', NOW()),
+(15, 7, 14, 4, '2-3', 2, 'NONE', TRUE, FALSE, 'VALID', 'PENDING', 'PRELIMINARY', NOW()),
+(16, 2, 1, 6, '22.15秒', 1, 'PROVINCE_RECORD', TRUE, TRUE, 'VALID', 'CONFIRMED', 'FINAL', NOW()),
+(17, 2, 7, 6, '23.01秒', 2, 'NONE', FALSE, FALSE, 'VALID', 'PENDING', 'FINAL', NOW());
 (18, 2, 11, 6, '23.45秒', 3, '无', TRUE, FALSE, 'PENDING', 'FINAL', NOW()),
 (19, 6, 16, 3, '21-15', 3, '无', TRUE, FALSE, 'VALID', 'PRELIMINARY', NOW());

@@ -146,6 +146,49 @@ public class ResultController {
     }
 
     /**
+     * 审核成绩 - 确认
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
+    @PostMapping("/{id}/confirm")
+    public String confirmResult(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            resultService.confirmResult(id);
+            redirectAttributes.addFlashAttribute("success", "成绩已确认");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/results/" + id;
+    }
+
+    /**
+     * 审核成绩 - 拒绝
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
+    @PostMapping("/{id}/reject")
+    public String rejectResult(@PathVariable Long id,
+                               @RequestParam(required = false) String rejectReason,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            resultService.rejectResult(id, rejectReason);
+            redirectAttributes.addFlashAttribute("success", "成绩已拒绝");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/results/" + id;
+    }
+
+    /**
+     * 待审核成绩列表
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")
+    @GetMapping("/pending-review")
+    public String pendingReview(Model model) {
+        List<Result> pendingResults = resultRepository.findByResultStatus("PENDING");
+        model.addAttribute("results", pendingResults);
+        return "result/pending-review";
+    }
+
+    /**
      * 删除成绩
      */
     @PostMapping("/{id}/delete")

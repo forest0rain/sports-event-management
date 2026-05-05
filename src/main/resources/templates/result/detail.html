@@ -9,68 +9,158 @@
 </head>
 <body>
 <div layout:fragment="content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>成绩详情</h2>
-            <div>
-                <a th:href="@{/results}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>返回列表
-                </a>
-                <a th:href="@{/results/{id}/edit(id=${result.id})}" class="btn btn-primary">
-                    <i class="bi bi-pencil me-1"></i>编辑
-                </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>成绩详情</h2>
+        <div>
+            <a th:href="@{/results}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>返回列表
+            </a>
+            <a th:href="@{/results/{id}/edit(id=${result.id})}" 
+               sec:authorize="hasAnyRole('ADMIN', 'REFEREE')"
+               class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>编辑
+            </a>
+        </div>
+    </div>
+
+    <!-- 审核状态提示 -->
+    <div th:if="${result.reviewStatus == 'PENDING'}" class="alert alert-warning d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock me-2"></i>此成绩待审核</span>
+        <div sec:authorize="hasAnyRole('ADMIN', 'REFEREE')">
+            <form th:action="@{/results/{id}/confirm(id=${result.id})}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-success btn-sm">确认成绩</button>
+            </form>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">拒绝</button>
+        </div>
+    </div>
+    <div th:if="${result.reviewStatus == 'CONFIRMED'}" class="alert alert-success">
+        <i class="bi bi-check-circle me-2"></i>此成绩已确认
+    </div>
+    <div th:if="${result.reviewStatus == 'REJECTED'}" class="alert alert-danger">
+        <i class="bi bi-x-circle me-2"></i>此成绩已拒绝
+    </div>
+
+    <!-- 成绩信息 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">成绩信息</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted" width="120">运动员</td>
+                            <td>
+                                <a th:href="@{/athletes/{id}(id=${result.athlete.id})}" 
+                                   th:text="${result.athlete.name}">-</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">所属单位</td>
+                            <td th:text="${result.athlete.organization}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">比赛项目</td>
+                            <td th:text="${result.sportType != null} ? ${result.sportType.name} : '-'">-</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">赛事</td>
+                            <td th:text="${result.schedule?.event?.name}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">轮次</td>
+                            <td th:text="${result.resultType} ?: '-'">-</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted" width="120">成绩</td>
+                            <td>
+                                <h3 class="text-primary mb-0" th:text="${result.scoreText}">-</h3>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">排名</td>
+                            <td>
+                                <span th:if="${result.rankPosition}" class="badge bg-primary fs-6" th:text="'第' + ${result.rankPosition} + '名'">-</span>
+                                <span th:unless="${result.rankPosition}" class="text-muted">未排名</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">成绩状态</td>
+                            <td>
+                                <span th:if="${result.status == 'VALID'}" class="badge bg-success">有效</span>
+                                <span th:if="${result.status == 'INVALID'}" class="badge bg-danger">无效</span>
+                                <span th:if="${result.status == 'DNS'}" class="badge bg-secondary">弃权</span>
+                                <span th:if="${result.status == 'DNF'}" class="badge bg-warning">未完成</span>
+                                <span th:if="${result.status == 'DQ'}" class="badge bg-danger">取消资格</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">审核状态</td>
+                            <td>
+                                <span th:if="${result.reviewStatus == 'PENDING'}" class="badge bg-warning text-dark">待审核</span>
+                                <span th:if="${result.reviewStatus == 'CONFIRMED'}" class="badge bg-success">已确认</span>
+                                <span th:if="${result.reviewStatus == 'REJECTED'}" class="badge bg-danger">已拒绝</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">纪录标记</td>
+                            <td>
+                                <span th:if="${result.isPersonalBest}" class="badge bg-info me-1">PB 个人最佳</span>
+                                <span th:if="${result.isSeasonBest}" class="badge bg-success me-1">SB 赛季最佳</span>
+                                <span th:if="${!result.isPersonalBest and !result.isSeasonBest}" class="text-muted">无</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">参赛号码</td>
+                            <td th:text="${result.bibNumber} ?: '-'">-</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">赛道</td>
+                            <td th:text="${result.lane} ?: '-'">-</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">裁判</td>
+                            <td th:text="${result.referee?.name} ?: '-'">-</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">录入时间</td>
+                            <td th:text="${result.recordTime != null} ? ${#temporals.format(result.recordTime, 'yyyy-MM-dd HH:mm')} : '-'">-</td>
+                        </tr>
+                        <tr th:if="${result.remark}">
+                            <td class="text-muted">备注</td>
+                            <td th:text="${result.remark}">-</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- 成绩信息 -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">成绩信息</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="text-muted" width="120">运动员</td>
-                                <td>
-                                    <a th:href="@{/athletes/{id}(id=${result.athlete.id})}" 
-                                       th:text="${result.athlete.name}">-</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">所属单位</td>
-                                <td th:text="${result.athlete.organization}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">比赛项目</td>
-                                <td th:text="${result.sportType != null} ? ${result.sportType.name} : '-'">-</td>
-                            </tr>
-                        </table>
+    <!-- 拒绝弹窗 -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/results/{id}/reject(id=${result.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">拒绝成绩</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="text-muted" width="120">成绩</td>
-                                <td>
-                                    <h3 class="text-primary mb-0" th:text="${result.scoreText}">-</h3>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">状态</td>
-                                <td>
-                                    <span th:if="${result.status == 'VALID'}" class="badge bg-success">有效</span>
-                                    <span th:if="${result.status == 'INVALID'}" class="badge bg-danger">无效</span>
-                                    <span th:if="${result.status == 'DNS'}" class="badge bg-secondary">弃权</span>
-                                    <span th:if="${result.status == 'DNF'}" class="badge bg-warning">未完成</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">录入时间</td>
-                                <td th:text="${result.createdTime != null ? @dateTimeFormatUtil.formatDateTime(result.createdTime) : '-'}">-</td>
-                            </tr>
-                        </table>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">拒绝原因</label>
+                            <textarea name="rejectReason" class="form-control" rows="3" placeholder="请输入拒绝原因..."></textarea>
+                        </div>
                     </div>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-danger">确认拒绝</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

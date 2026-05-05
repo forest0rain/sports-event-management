@@ -22,6 +22,11 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     Page<Result> findByAthleteIdOrderByCreatedTimeDesc(Long athleteId, Pageable pageable);
 
     /**
+     * 根据审核状态查询成绩（公开浏览）
+     */
+    Page<Result> findByReviewStatus(String reviewStatus, Pageable pageable);
+
+    /**
      * 根据赛程查询成绩
      */
     List<Result> findByScheduleIdOrderByRankAsc(Long scheduleId);
@@ -38,6 +43,15 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
            "AND r.status = 'VALID' ORDER BY r.score ASC")
     List<Result> findBestResultsByAthleteAndSport(@Param("athleteId") Long athleteId, 
                                                    @Param("sportTypeId") Long sportTypeId);
+
+    /**
+     * 查询运动员特定项目本年度的最佳成绩（赛季最佳SB）
+     */
+    @Query("SELECT r FROM Result r WHERE r.athlete.id = :athleteId AND r.sportType.id = :sportTypeId " +
+           "AND r.status = 'VALID' AND YEAR(r.recordTime) = :year ORDER BY r.score ASC")
+    List<Result> findSeasonBestByAthleteAndSport(@Param("athleteId") Long athleteId,
+                                                   @Param("sportTypeId") Long sportTypeId,
+                                                   @Param("year") int year);
 
     /**
      * 查询项目排名
@@ -77,4 +91,15 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
            "JOIN athlete a ON r.athlete_id = a.id " +
            "WHERE r.`rank` <= 3 GROUP BY a.id, a.name ORDER BY cnt DESC LIMIT 10", nativeQuery = true)
     List<Object[]> countAwardsByAthletes();
+
+    /**
+     * 根据审核状态查询成绩
+     */
+    List<Result> findByStatus(String status);
+
+    /**
+     * 根据赛事ID查询已确认成绩
+     */
+    @Query("SELECT r FROM Result r WHERE r.schedule.event.id = :eventId AND r.status = 'CONFIRMED' ORDER BY r.sportType.name, r.rank ASC")
+    List<Result> findConfirmedByEventId(@Param("eventId") Long eventId);
 }

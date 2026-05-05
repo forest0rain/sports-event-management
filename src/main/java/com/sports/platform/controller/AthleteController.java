@@ -33,12 +33,19 @@ public class AthleteController {
                       @RequestParam(required = false) String keyword,
                       @RequestParam(required = false) String gender,
                       @RequestParam(required = false) String ageGroup,
+                      @RequestParam(required = false) String specialty,
                       Model model) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdTime").descending());
         
+        // 判断是否有筛选条件
+        boolean hasFilter = (keyword != null && !keyword.isEmpty()) ||
+                           (gender != null && !gender.isEmpty()) ||
+                           (ageGroup != null && !ageGroup.isEmpty()) ||
+                           (specialty != null && !specialty.isEmpty());
+
         Page<Athlete> athletes;
-        if (keyword != null && !keyword.isEmpty()) {
-            athletes = athleteService.searchAthletes(keyword, pageRequest);
+        if (hasFilter) {
+            athletes = athleteService.multiSearchAthletes(keyword, gender, ageGroup, specialty, pageRequest);
         } else {
             athletes = athleteService.getAllAthletes(pageRequest);
         }
@@ -47,8 +54,10 @@ public class AthleteController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("gender", gender);
         model.addAttribute("ageGroup", ageGroup);
+        model.addAttribute("specialty", specialty);
         model.addAttribute("genders", List.of("M", "F"));
         model.addAttribute("ageGroups", List.of("U18", "U20", "U23", "OPEN"));
+        model.addAttribute("specialtyList", List.of("短跑", "长跑", "跳远", "跳高", "游泳", "篮球", "足球", "羽毛球", "乒乓球"));
         
         return "athlete/list";
     }
