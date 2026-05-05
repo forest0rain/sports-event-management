@@ -36,7 +36,7 @@ public class PublicController {
                                Model model) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         // 只展示已发布及以后状态的赛事
-        Page<Event> events = eventRepository.findByStatusNot(Event.EventStatus.DRAFT, pageable);
+        Page<Event> events = eventRepository.findByStatusNot("DRAFT", pageable);
         model.addAttribute("events", events);
         model.addAttribute("pageTitle", "赛事信息");
         return "public/events";
