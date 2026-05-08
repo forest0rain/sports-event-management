@@ -61,7 +61,7 @@ public interface AthleteRepository extends JpaRepository<Athlete, Long> {
            "(:keyword IS NULL OR :keyword = '' OR a.name LIKE %:keyword% OR a.organization LIKE %:keyword%) AND " +
            "(:gender IS NULL OR :gender = '' OR a.gender = :gender) AND " +
            "(:ageGroup IS NULL OR :ageGroup = '' OR a.ageGroup = :ageGroup) AND " +
-           "(:specialty IS NULL OR :specialty = '' OR a.specialty LIKE %:specialty%)")
+           "(:specialty IS NULL OR :specialty = '' OR a.specialties LIKE %:specialty%)")
     Page<Athlete> multiSearch(@Param("keyword") String keyword,
                               @Param("gender") String gender,
                               @Param("ageGroup") String ageGroup,
