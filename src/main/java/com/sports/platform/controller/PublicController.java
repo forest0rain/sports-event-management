@@ -34,7 +34,7 @@ public class PublicController {
     public String publicEvents(@RequestParam(defaultValue = "0") int page,
                                @RequestParam(defaultValue = "12") int size,
                                Model model) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         // 只展示已发布及以后状态的赛事
         Page<Event> events = eventRepository.findByStatusNot("DRAFT", pageable);
         model.addAttribute("events", events);
@@ -46,7 +46,7 @@ public class PublicController {
     public String publicSchedules(@RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "12") int size,
                                   Model model) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "scheduleDate", "startTime"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id","startTime"));
         Page<Schedule> schedules = scheduleRepository.findAll(pageable);
         model.addAttribute("schedules", schedules);
         model.addAttribute("pageTitle", "赛程安排");
@@ -57,7 +57,7 @@ public class PublicController {
     public String publicResults(@RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "12") int size,
                                 Model model) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         // 只展示已审核确认的成绩
         Page<Result> results = resultRepository.findByReviewStatus("CONFIRMED", pageable);
         model.addAttribute("results", results);

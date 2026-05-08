@@ -27,7 +27,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title mb-0" th:text="${event.name}">赛事名称</h6>
                             <span class="badge"
-                                  th:classappend="${event.status == T(com.sports.platform.entity.Event.EventStatus).REGISTRATION} ? 'bg-primary' : (${event.status == T(com.sports.platform.entity.Event.EventStatus).ONGOING} ? 'bg-success' : (${event.status == T(com.sports.platform.entity.Event.EventStatus).FINISHED} ? 'bg-secondary' : 'bg-info'))"
+                                  th:classappend="${event.status == 'REGISTRATION'} ? 'bg-primary' : (${event.status == 'ONGOING'} ? 'bg-success' : (${event.status == 'FINISHED'} ? 'bg-secondary' : 'bg-info'))"
                                   th:text="${event.status}">状态</span>
                         </div>
                         <p class="card-text text-muted small mb-1">
