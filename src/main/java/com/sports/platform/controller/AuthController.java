@@ -28,10 +28,12 @@ public class AuthController {
      * 首页
      */
     @GetMapping("/")
-    public String index() {
-        return "redirect:/dashboard";
+    public String index(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails != null) {
+            return "redirect:/dashboard";
+        }
+        return "redirect:/public/events";
     }
-
     /**
      * 登录页面
      */
